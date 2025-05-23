@@ -101,11 +101,9 @@ Each problem includes a `cancre.py` (French for "dunce") that provides a minimal
 1. Clone this repository
 2. Select a test problem directory
 3. Provide the contents of `prompt.txt` to your assigned LLM/code assistant
-4. Extract the LLM's solution into a new Python file in the same directory
-5. Run the benchmarking script to evaluate the solution:
-   ```bash
-   python benchmarking.py solution.py
-   ```
+4. Extract the LLM's solution into a new Python file in the same directory with the assistant's name
+
+Conduct the generation in an isolated environment to prevent LLMs from accessing each other's solutions
 
 ## Contributing
 
