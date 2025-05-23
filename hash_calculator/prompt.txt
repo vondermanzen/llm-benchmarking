@@ -1,0 +1,51 @@
+Problem: Cryptographic Hash Chain Calculator
+
+Your task is to write a program that calculates a complex chain of cryptographic operations on an input string.
+
+Input Format:
+- A single line containing a string S (1 ≤ |S| ≤ 1000), consisting of printable ASCII characters
+
+Output Format:
+- A single line containing the final 64-character hexadecimal hash
+
+The hash chain should be calculated as follows:
+1. Start with input string S
+2. Convert S to UTF-8 bytes
+3. Calculate SHA-256 hash
+4. Convert the result to Base64
+5. Calculate RIPEMD-160 hash
+6. Convert to uppercase hex string
+7. Calculate SHA-1 hash
+8. Convert to lowercase hex string
+9. Calculate SHA-512 hash
+10. Take first 32 bytes
+11. Calculate MD5 hash
+12. Finally, calculate SHA-384 hash
+
+Example Input:
+Hello, World!
+
+Example Output:
+a9842d666c6d9a334d8987a0628c68d5302e9251c7e9f0168f7b5dd2b7ff2763c9ae92b6e4c574e4ba05c3108468db17
+
+Explanation:
+Let's follow the chain (showing first 10 chars of each step):
+1. "Hello, World!" (input)
+2. → UTF-8: 48656C6C6F2C20576F...
+3. → SHA-256: dffd6021bb2bd5b0...
+4. → Base64: ZGZmZDYwMjFiYjJ...
+5. → RIPEMD-160: f71c35fd4d15...
+6. → Uppercase: F71C35FD4D15...
+7. → SHA-1: 7b502c3a1f48...
+8. → Lowercase: 7b502c3a1f48...
+9. → SHA-512: c89e3c9293ea...
+10. → First 32 bytes: c89e3c9293ea...
+11. → MD5: 5d41402abc4b...
+12. → SHA-384: a9842d666c6d... (final output)
+
+Note:
+- All hex strings should be lowercase
+- Use standard library implementations of hash functions
+- All intermediate steps must be exactly as specified
+- Time limit: 1 second
+- Memory limit: 256 MB 

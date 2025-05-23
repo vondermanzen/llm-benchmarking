@@ -1,0 +1,52 @@
+Problem: Primality Test
+
+Your task is to write a program that determines whether a given number is prime. A prime number is a natural number greater than 1 that is only divisible by 1 and itself.
+
+Input Format:
+- The first line contains a single integer T (1 ≤ T ≤ 100), the number of test cases
+- Each of the next T lines contains a single integer N (1 ≤ N ≤ 10^18)
+
+Output Format:
+- For each test case, output a single line containing either:
+  * "PRIME" if the number is prime
+  * "COMPOSITE" if the number is not prime
+  * "NEITHER" if the number is 1 (which is neither prime nor composite)
+
+Example Input:
+5
+2
+17
+1
+100
+999999999999999989
+
+Example Output:
+PRIME
+PRIME
+NEITHER
+COMPOSITE
+PRIME
+
+Explanation:
+- 2 is the smallest prime number
+- 17 is prime as it has no divisors other than 1 and itself
+- 1 is neither prime nor composite by definition
+- 100 = 2^2 * 5^2 is composite
+- 999999999999999989 is the largest prime under 10^18
+
+Note:
+- Your solution must be efficient enough to handle large numbers
+- Trial division up to sqrt(N) will be too slow for large inputs
+- Consider using probabilistic primality tests (e.g., Miller-Rabin)
+- All test cases are guaranteed to be valid integers
+- Time limit: 2 seconds per test case
+- Memory limit: 256 MB
+
+Scoring:
+Your solution will be tested on numbers with different properties:
+- Small primes (< 10^6)
+- Large primes (near 10^18)
+- Carmichael numbers (composite numbers that can fool some primality tests)
+- Perfect squares and higher powers
+- Numbers with small prime factors
+- Numbers that are products of two large primes 

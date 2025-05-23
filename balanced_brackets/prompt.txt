@@ -1,0 +1,48 @@
+Problem: Balanced Brackets
+
+Your task is to write a program that determines whether a sequence of brackets is properly balanced.
+
+Input Format:
+- The first line contains a single integer N (1 ≤ N ≤ 10,000), the length of the bracket sequence
+- The second line contains a string of N characters, consisting only of brackets: '(', ')', '[', ']', '{', '}'
+
+Output Format:
+- A single line containing either "YES" if the brackets are balanced, or "NO" if they are not
+
+A sequence of brackets is considered balanced if:
+1. Every opening bracket has a matching closing bracket of the same type
+2. The pairs of brackets are properly nested (inner pairs must be closed before outer pairs)
+
+Example Input 1:
+6
+{[()]}
+
+Example Output 1:
+YES
+
+Example Input 2:
+4
+{[}]
+
+Example Output 2:
+NO
+
+Example Input 3:
+2
+)(
+
+Example Output 3:
+NO
+
+Explanation:
+- First example is balanced because:
+  * Each bracket has a matching pair
+  * Inner pairs () are closed before [], which are closed before {}
+- Second example is not balanced because brackets are crossed
+- Third example is not balanced because closing bracket comes before opening bracket
+
+Note:
+- Empty sequence is considered balanced
+- A single bracket or unclosed bracket sequence is not balanced
+- Time limit: 1 second
+- Memory limit: 256 MB 
