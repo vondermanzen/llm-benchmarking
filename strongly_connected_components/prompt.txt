@@ -1,0 +1,35 @@
+Problem: Count Strongly Connected Components
+
+Your task is to write a program that counts the number of strongly connected components (SCCs) in a directed graph.
+
+A strongly connected component is a maximal portion of a directed graph in which there is a directed path from any vertex to every other vertex in that portion.
+
+Input Format:
+- The first line contains two integers N and M, where N is the number of vertices (1 ≤ N ≤ 10,000) and M is the number of edges (0 ≤ M ≤ 100,000)
+- The following M lines each contain two integers u and v (1 ≤ u, v ≤ N), representing a directed edge from vertex u to vertex v
+- Vertices are numbered from 1 to N
+
+Output Format:
+- A single integer representing the number of strongly connected components in the graph
+
+Example Input:
+4 4
+1 2
+2 3
+3 1
+4 1
+
+Example Output:
+2
+
+Explanation:
+In this example:
+- Vertices 1, 2, and 3 form one strongly connected component because there is a path from each vertex to every other vertex
+- Vertex 4 forms another strongly connected component by itself
+- Therefore, there are 2 strongly connected components in total
+
+Note:
+- Your solution should handle empty graphs (M = 0) and disconnected graphs
+- The input graph may contain self-loops and multiple edges between the same pair of vertices
+- Time limit: 2 seconds
+- Memory limit: 256 MB 

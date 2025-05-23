@@ -1,0 +1,45 @@
+Problem: Matrix Rank over GF(2)
+
+Your task is to write a program that computes the rank of a matrix over GF(2) (binary field). The matrix will be given in the form of linear equations where all operations are performed modulo 2.
+
+Input Format:
+- The first line contains two integers N and M, where:
+  * N is the number of equations (1 ≤ N ≤ 1000)
+  * M is the number of variables (1 ≤ M ≤ 1000)
+- The following N lines each contain M+1 binary digits (0 or 1):
+  * The first M digits represent the coefficients of the variables
+  * The last digit represents the constant term
+- Each equation is of the form: a₁x₁ + a₂x₂ + ... + aₘxₘ = b (mod 2)
+  where aᵢ and b are binary digits (0 or 1)
+
+Output Format:
+- A single integer representing the rank of the augmented matrix [A|b]
+
+Example Input:
+3 3
+1 0 1 1
+0 1 1 0
+1 1 0 1
+
+Example Output:
+3
+
+Explanation:
+The system represents these equations mod 2:
+x₁ + x₃ = 1
+x₂ + x₃ = 0
+x₁ + x₂ = 1
+
+After converting to reduced row echelon form (mod 2):
+1 0 0 1
+0 1 0 0
+0 0 1 0
+
+The rank is 3 as there are 3 non-zero rows in the reduced form.
+
+Note:
+- All operations are performed modulo 2 (in GF(2))
+- The rank is the number of non-zero rows in the reduced row echelon form
+- A system may be inconsistent (no solution) or have multiple solutions
+- Time limit: 2 seconds
+- Memory limit: 256 MB 
