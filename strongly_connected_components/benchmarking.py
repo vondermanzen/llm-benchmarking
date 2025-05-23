@@ -1,79 +1,93 @@
 import sys
 import random
 from collections import defaultdict
-from typing import List, Set, Dict
+from typing import List, Set, Dict, Tuple
+import subprocess
+import os
 
-def generate_test_case(n: int, m: int, case_type: str = "random") -> str:
-    """Generate a test case with n vertices and m edges."""
-    edges = set()
-    test_input = f"{n} {m}\n"
-    
+def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
+    """Generate a test case based on the type."""
     if case_type == "single_scc":
-        # Generate a single strongly connected component
-        vertices = list(range(1, n + 1))
-        random.shuffle(vertices)
-        for i in range(n):
-            edges.add((vertices[i], vertices[(i + 1) % n]))
+        # Generate a cycle
+        n = random.randint(3, 10)
+        edges = [(i, (i + 1) % n) for i in range(n)]
+        return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), "1"
         
-        # Add remaining random edges if needed
-        while len(edges) < m:
-            u = random.randint(1, n)
-            v = random.randint(1, n)
-            edges.add((u, v))
-            
+    elif case_type == "no_edges":
+        # Each node is its own SCC
+        n = random.randint(5, 10)
+        return f"{n} 0\n", str(n)
+        
     elif case_type == "chain":
-        # Generate a chain of SCCs
-        for i in range(1, n):
-            edges.add((i, i + 1))
-            
+        # Chain of nodes, each node is its own SCC
+        n = random.randint(5, 10)
+        edges = [(i, i + 1) for i in range(n - 1)]
+        return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), str(n)
+        
+    elif case_type == "two_scc":
+        # Two strongly connected components
+        n = random.randint(6, 10)
+        half = n // 2
+        edges = [(i, (i + 1) % half) for i in range(half)]  # First SCC
+        edges += [(i + half, ((i + 1) % half) + half) for i in range(half)]  # Second SCC
+        edges.append((0, half))  # Connect them
+        return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), "2"
+        
     else:  # random
-        while len(edges) < m:
-            u = random.randint(1, n)
-            v = random.randint(1, n)
-            edges.add((u, v))
-    
-    for u, v in edges:
-        test_input += f"{u} {v}\n"
-    return test_input.strip()
+        n = random.randint(5, 15)
+        edge_count = random.randint(n, n * 2)
+        edges = []
+        for _ in range(edge_count):
+            u = random.randint(0, n - 1)
+            v = random.randint(0, n - 1)
+            edges.append((u, v))
+        return (
+            f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges),
+            str(kosaraju_scc(n, edges))
+        )
 
-def kosaraju_scc(n: int, edges: List[tuple]) -> int:
-    """
-    Implementation of Kosaraju's algorithm to find the number of SCCs.
-    This serves as the reference solution.
-    """
-    def dfs_forward(node: int, visited: Set[int], order: List[int]):
-        visited.add(node)
-        for neighbor in graph[node]:
-            if neighbor not in visited:
-                dfs_forward(neighbor, visited, order)
-        order.append(node)
+def kosaraju_scc(n: int, edges: List[Tuple[int, int]]) -> int:
+    """Reference implementation of Kosaraju's algorithm."""
     
-    def dfs_reverse(node: int, visited: Set[int]):
-        visited.add(node)
-        for neighbor in reverse_graph[node]:
-            if neighbor not in visited:
-                dfs_reverse(neighbor, visited)
-    
-    # Build adjacency lists for original and reversed graphs
+    # Build adjacency lists for graph and transpose
     graph = defaultdict(list)
-    reverse_graph = defaultdict(list)
+    transpose = defaultdict(list)
     for u, v in edges:
         graph[u].append(v)
-        reverse_graph[v].append(u)
+        transpose[v].append(u)
     
-    # First DFS to get finishing order
+    # First DFS to get finishing times
     visited = set()
-    order = []
-    for node in range(1, n + 1):
-        if node not in visited:
-            dfs_forward(node, visited, order)
+    finish_order = []
     
-    # Second DFS on reversed graph
+    def dfs1(node):
+        if node in visited:
+            return
+        visited.add(node)
+        for neighbor in graph[node]:
+            dfs1(neighbor)
+        finish_order.append(node)
+    
+    # Run first DFS on all nodes
+    for node in range(n):
+        if node not in visited:
+            dfs1(node)
+    
+    # Second DFS on transpose graph
     visited = set()
     scc_count = 0
-    for node in reversed(order):
+    
+    def dfs2(node):
+        if node in visited:
+            return
+        visited.add(node)
+        for neighbor in transpose[node]:
+            dfs2(neighbor)
+    
+    # Process nodes in reverse finishing order
+    for node in reversed(finish_order):
         if node not in visited:
-            dfs_reverse(node, visited)
+            dfs2(node)
             scc_count += 1
     
     return scc_count
@@ -91,121 +105,74 @@ def generate_test_cases() -> List[Dict]:
     """Generate various test cases with their expected outputs."""
     test_cases = []
     
-    # Test case 1: Example from prompt
+    # Test case 1: Example case
     test_cases.append({
-        "input": "4 4\n1 2\n2 3\n3 1\n4 1",
+        "input": "1\n4 4\n0 1\n1 2\n2 3\n3 1",
         "output": "2"
     })
     
-    # Test case 2: Empty graph
+    # Test case 2: Multiple test cases with different types
+    cases = [
+        generate_test_case("single_scc"),
+        generate_test_case("no_edges"),
+        generate_test_case("chain"),
+        generate_test_case("two_scc"),
+        generate_test_case("random")
+    ]
+    combined_input = str(len(cases)) + "\n" + "\n".join(input_str for input_str, _ in cases)
+    combined_output = "\n".join(output for _, output in cases)
     test_cases.append({
-        "input": "5 0",
-        "output": "5"
+        "input": combined_input,
+        "output": combined_output
     })
     
-    # Test case 3: Single SCC
+    # Test case 3: Large random cases
+    random_cases = [generate_test_case("random") for _ in range(5)]
+    combined_input = str(len(random_cases)) + "\n" + "\n".join(input_str for input_str, _ in random_cases)
+    combined_output = "\n".join(output for _, output in random_cases)
     test_cases.append({
-        "input": generate_test_case(5, 10, "single_scc"),
-        "output": "1"
+        "input": combined_input,
+        "output": combined_output
     })
-    
-    # Test case 4: Chain of SCCs
-    test_cases.append({
-        "input": generate_test_case(6, 5, "chain"),
-        "output": "6"
-    })
-    
-    # Test case 5: Large random graph
-    test_cases.append({
-        "input": generate_test_case(100, 300),
-        "output": None  # Will be computed
-    })
-    
-    # Compute expected outputs for generated test cases
-    for case in test_cases:
-        if case["output"] is None:
-            lines = case["input"].strip().split("\n")
-            n, m = map(int, lines[0].split())
-            edges = []
-            for i in range(m):
-                u, v = map(int, lines[i + 1].split())
-                edges.append((u, v))
-            case["output"] = str(kosaraju_scc(n, edges))
     
     return test_cases
 
-def run_tests(solution_file: str) -> None:
-    """Run all test cases and score the solution."""
-    try:
-        with open(solution_file, 'r') as f:
-            solution_code = f.read()
-        
-        # Create a temporary module to run the solution
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("solution", solution_file)
-        solution = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(solution)
-        
-        test_cases = generate_test_cases()
-        total_score = 0
-        max_score = len(test_cases)
-        
-        for i, case in enumerate(test_cases, 1):
-            try:
-                # Redirect stdin to provide input
-                import io
-                import sys
-                sys.stdin = io.StringIO(case["input"])
-                
-                # Capture stdout
-                from io import StringIO
-                captured_output = StringIO()
-                sys.stdout = captured_output
-                
-                # Run solution with timeout
-                import threading
-                import _thread
-                def run_solution():
-                    solution.main()
-                
-                thread = threading.Thread(target=run_solution)
-                thread.start()
-                thread.join(timeout=2)  # 2 second timeout
-                
-                if thread.is_alive():
-                    _thread.interrupt_main()
-                    raise TimeoutError("Solution took too long")
-                
-                received_output = captured_output.getvalue()
-                
-                # Verify output
-                if verify_solution(case["input"], case["output"], received_output):
-                    total_score += 1
-                    print(f"Test case {i}: Passed")
-                else:
-                    print(f"Test case {i}: Failed")
-                    print(f"Expected: {case['output']}")
-                    print(f"Received: {received_output.strip()}")
-                
-            except Exception as e:
-                print(f"Test case {i}: Error - {str(e)}")
-            
-            finally:
-                # Reset stdin and stdout
-                sys.stdin = sys.__stdin__
-                sys.stdout = sys.__stdout__
-        
-        # Calculate and print final score
-        final_score = (total_score / max_score) * 100
-        print(f"\nFinal Score: {final_score:.2f}%")
-        print(f"Passed {total_score} out of {max_score} test cases")
-        
-    except Exception as e:
-        print(f"Error running tests: {str(e)}")
+# Current benchmarking script's filename
+benchmark_file = 'benchmarking.py'
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python benchmarking.py <solution_file>")
-        sys.exit(1)
+# List all .py files in the current directory except this one
+py_files = [f for f in os.listdir('.') if f.endswith('.py') and f != benchmark_file]
+
+results = {}
+
+# Generate test cases once to use for all solutions
+test_cases = generate_test_cases()
+
+for file in py_files:
+    correct = 0
+    total = len(test_cases)
     
-    run_tests(sys.argv[1]) 
+    for case in test_cases:
+        try:
+            # Run the script with input and capture output
+            result = subprocess.run(
+                ['python', file],
+                input=case["input"].encode(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=2  # 2 second timeout per test case
+            )
+            output = result.stdout.decode().strip()
+            if output == case["output"]:
+                correct += 1
+            
+        except Exception as e:
+            pass  # Failed test case
+    
+    results[file] = f"{correct}/{total}"
+
+# Print summary of results
+print("\nScript Evaluation Results:")
+print("-" * 30)
+for script, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
+    print(f"{script}: {score}") 

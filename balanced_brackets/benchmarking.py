@@ -1,240 +1,165 @@
 import sys
 import random
-from typing import List, Dict, Optional
+import subprocess
+import os
+from typing import List, Dict, Optional, Tuple
 
-def is_balanced(brackets: str) -> bool:
-    """Reference solution to check if brackets are balanced."""
+def is_balanced(s: str) -> bool:
+    """Reference implementation to check if brackets are balanced."""
     stack = []
-    pairs = {')': '(', ']': '[', '}': '{'}
+    brackets = {')': '(', '}': '{', ']': '['}
     
-    for bracket in brackets:
-        if bracket in '({[':
-            stack.append(bracket)
-        else:  # closing bracket
-            if not stack:  # no matching opening bracket
+    for char in s:
+        if char in '({[':
+            stack.append(char)
+        elif char in ')}]':
+            if not stack or stack.pop() != brackets[char]:
                 return False
-            if stack[-1] != pairs[bracket]:  # mismatched brackets
-                return False
-            stack.pop()
     
-    return len(stack) == 0  # check if all brackets were matched
+    return len(stack) == 0
 
-def generate_test_case(n: int, case_type: str = "random") -> str:
-    """Generate a test case of length n."""
-    if case_type == "balanced":
-        # Generate a balanced sequence
+def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
+    """Generate a test case based on the type."""
+    if case_type == "always_balanced":
+        # Generate perfectly balanced brackets
+        n = random.randint(3, 10)
+        brackets = []
+        opening = ['(', '{', '[']
+        closing = [')', '}', ']']
         stack = []
-        brackets = []
-        opening = ['(', '[', '{']
-        closing = [')', ']', '}']
-        pairs = dict(zip(opening, closing))
         
-        # Ensure even length
-        n = (n // 2) * 2
-        
-        for i in range(n):
-            if len(stack) == 0 or (i < n - 1 and random.random() < 0.6):
-                # Add opening bracket
-                bracket = random.choice(opening)
-                stack.append(bracket)
-                brackets.append(bracket)
-            else:
-                # Add matching closing bracket
-                bracket = pairs[stack.pop()]
-                brackets.append(bracket)
+        for i in range(n * 2):
+            if i < n:  # First half: mostly opening brackets
+                bracket_type = random.randint(0, 2)
+                brackets.append(opening[bracket_type])
+                stack.append(closing[bracket_type])
+            else:  # Second half: matching closing brackets
+                brackets.append(stack.pop())
                 
-        return f"{n}\n{''.join(brackets)}"
+        return "".join(brackets), "1"
         
-    elif case_type == "unbalanced":
-        # Generate an unbalanced sequence
+    elif case_type == "always_unbalanced":
+        # Generate clearly unbalanced brackets
+        n = random.randint(3, 10)
         brackets = []
-        all_brackets = ['(', ')', '[', ']', '{', '}']
+        opening = ['(', '{', '[']
+        closing = [')', '}', ']']
         
-        # Choose type of unbalanced sequence
-        error_type = random.choice([
-            "mismatched",  # e.g., {[}]
-            "unclosed",    # e.g., {[()
-            "extra_closing"  # e.g., {[()]}]
-        ])
+        # Add n opening brackets
+        for _ in range(n):
+            brackets.append(random.choice(opening))
+        # Add n-1 closing brackets
+        for _ in range(n-1):
+            brackets.append(random.choice(closing))
+            
+        return "".join(brackets), "0"
         
-        if error_type == "mismatched":
-            # Generate a sequence with mismatched brackets
-            brackets = list("{[()]}") # start with valid sequence
-            # Swap two random positions
-            i, j = random.sample(range(len(brackets)), 2)
-            brackets[i], brackets[j] = brackets[j], brackets[i]
-        elif error_type == "unclosed":
-            # Generate sequence with unclosed brackets
-            opening = ['(', '[', '{']
-            for _ in range(n):
-                brackets.append(random.choice(opening))
-        else:  # extra_closing
-            # Generate sequence with extra closing brackets
-            closing = [')', ']', '}']
-            for _ in range(n):
-                brackets.append(random.choice(closing))
-                
-        return f"{len(brackets)}\n{''.join(brackets)}"
+    elif case_type == "empty":
+        # Empty string is considered balanced
+        return "", "1"
         
     else:  # random
-        # Generate completely random sequence
-        all_brackets = ['(', ')', '[', ']', '{', '}']
-        brackets = [random.choice(all_brackets) for _ in range(n)]
-        return f"{n}\n{''.join(brackets)}"
-
-def verify_solution(test_input: str, expected_output: str, received_output: str) -> bool:
-    """Verify if the received output matches the expected output."""
-    try:
-        # Parse input
-        lines = test_input.strip().split("\n")
-        n = int(lines[0])
-        brackets = lines[1]
+        n = random.randint(4, 20)
+        brackets = []
+        opening = ['(', '{', '[']
+        closing = [')', '}', ']']
+        stack = []
         
-        # Check if brackets are actually balanced
-        is_actually_balanced = is_balanced(brackets)
-        
-        # Parse and check output
-        received = received_output.strip()
-        return (received == "YES" and is_actually_balanced) or (received == "NO" and not is_actually_balanced)
-        
-    except:
-        return False
+        for _ in range(n):
+            if not stack or random.random() < 0.6:  # 60% chance of opening bracket
+                bracket_type = random.randint(0, 2)
+                brackets.append(opening[bracket_type])
+                stack.append(closing[bracket_type])
+            else:  # Close a bracket
+                brackets.append(stack.pop())
+                
+        # Randomly decide whether to make it unbalanced
+        make_unbalanced = random.random() < 0.4  # 40% chance
+        if make_unbalanced:
+            if random.random() < 0.5:  # Add extra closing bracket
+                brackets.append(random.choice(closing))
+            else:  # Leave some brackets unclosed
+                stack_size = len(stack)
+                if stack_size > 0:
+                    stack = stack[:-random.randint(1, stack_size)]
+                    
+        # Add remaining closing brackets if we want it balanced
+        if not make_unbalanced:
+            brackets.extend(reversed(stack))
+            
+        return "".join(brackets), "1" if is_balanced("".join(brackets)) else "0"
 
 def generate_test_cases() -> List[Dict]:
     """Generate various test cases with their expected outputs."""
     test_cases = []
     
-    # Test case 1: Example from prompt
+    # Test case 1: Example case
     test_cases.append({
-        "input": "6\n{[()]}",
-        "output": "YES"
+        "input": "1\n{[()]}",
+        "output": "1"
     })
     
-    # Test case 2: Another example from prompt
+    # Test case 2: Multiple test cases with different types
+    cases = [
+        generate_test_case("always_balanced"),
+        generate_test_case("always_unbalanced"),
+        generate_test_case("empty"),
+        generate_test_case("random")
+    ]
+    combined_input = str(len(cases)) + "\n" + "\n".join(input_str for input_str, _ in cases)
+    combined_output = "\n".join(output for _, output in cases)
     test_cases.append({
-        "input": "4\n{[}]",
-        "output": "NO"
+        "input": combined_input,
+        "output": combined_output
     })
     
-    # Test case 3: Third example from prompt
+    # Test case 3: Large random cases
+    random_cases = [generate_test_case("random") for _ in range(5)]
+    combined_input = str(len(random_cases)) + "\n" + "\n".join(input_str for input_str, _ in random_cases)
+    combined_output = "\n".join(output for _, output in random_cases)
     test_cases.append({
-        "input": "2\n)(", 
-        "output": "NO"
+        "input": combined_input,
+        "output": combined_output
     })
-    
-    # Test case 4: Empty sequence
-    test_cases.append({
-        "input": "0\n",
-        "output": "YES"
-    })
-    
-    # Test case 5: Single bracket
-    test_cases.append({
-        "input": "1\n(",
-        "output": "NO"
-    })
-    
-    # Test case 6: Large balanced sequence
-    test_cases.append({
-        "input": generate_test_case(100, "balanced"),
-        "output": None
-    })
-    
-    # Test case 7: Large unbalanced sequence
-    test_cases.append({
-        "input": generate_test_case(100, "unbalanced"),
-        "output": None
-    })
-    
-    # Test case 8: Random sequence
-    test_cases.append({
-        "input": generate_test_case(50, "random"),
-        "output": None
-    })
-    
-    # Compute expected outputs for generated test cases
-    for case in test_cases:
-        if case["output"] is None:
-            lines = case["input"].strip().split("\n")
-            brackets = lines[1] if len(lines) > 1 else ""
-            case["output"] = "YES" if is_balanced(brackets) else "NO"
     
     return test_cases
 
-def run_tests(solution_file: str) -> None:
-    """Run all test cases and score the solution."""
-    try:
-        with open(solution_file, 'r') as f:
-            solution_code = f.read()
-        
-        # Create a temporary module to run the solution
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("solution", solution_file)
-        solution = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(solution)
-        
-        test_cases = generate_test_cases()
-        total_score = 0
-        max_score = len(test_cases)
-        
-        for i, case in enumerate(test_cases, 1):
-            try:
-                # Redirect stdin to provide input
-                import io
-                import sys
-                sys.stdin = io.StringIO(case["input"])
-                
-                # Capture stdout
-                from io import StringIO
-                captured_output = StringIO()
-                sys.stdout = captured_output
-                
-                # Run solution with timeout
-                import threading
-                import _thread
-                def run_solution():
-                    solution.main()
-                
-                thread = threading.Thread(target=run_solution)
-                thread.start()
-                thread.join(timeout=1)  # 1 second timeout
-                
-                if thread.is_alive():
-                    _thread.interrupt_main()
-                    raise TimeoutError("Solution took too long")
-                
-                received_output = captured_output.getvalue()
-                
-                # Verify output
-                if verify_solution(case["input"], case["output"], received_output):
-                    total_score += 1
-                    print(f"Test case {i}: Passed")
-                else:
-                    print(f"Test case {i}: Failed")
-                    print(f"Input:")
-                    print(case["input"])
-                    print(f"Expected: {case['output']}")
-                    print(f"Received: {received_output.strip()}")
-                
-            except Exception as e:
-                print(f"Test case {i}: Error - {str(e)}")
-            
-            finally:
-                # Reset stdin and stdout
-                sys.stdin = sys.__stdin__
-                sys.stdout = sys.__stdout__
-        
-        # Calculate and print final score
-        final_score = (total_score / max_score) * 100
-        print(f"\nFinal Score: {final_score:.2f}%")
-        print(f"Passed {total_score} out of {max_score} test cases")
-        
-    except Exception as e:
-        print(f"Error running tests: {str(e)}")
+# Current benchmarking script's filename
+benchmark_file = 'benchmarking.py'
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python benchmarking.py <solution_file>")
-        sys.exit(1)
+# List all .py files in the current directory except this one
+py_files = [f for f in os.listdir('.') if f.endswith('.py') and f != benchmark_file]
+
+results = {}
+
+# Generate test cases once to use for all solutions
+test_cases = generate_test_cases()
+
+for file in py_files:
+    correct = 0
+    total = len(test_cases)
     
-    run_tests(sys.argv[1]) 
+    for case in test_cases:
+        try:
+            # Run the script with input and capture output
+            result = subprocess.run(
+                ['python', file],
+                input=case["input"].encode(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=2  # 2 second timeout per test case
+            )
+            output = result.stdout.decode().strip()
+            if output == case["output"]:
+                correct += 1
+            
+        except Exception as e:
+            pass  # Failed test case
+    
+    results[file] = f"{correct}/{total}"
+
+# Print summary of results
+print("\nScript Evaluation Results:")
+print("-" * 30)
+for script, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
+    print(f"{script}: {score}") 

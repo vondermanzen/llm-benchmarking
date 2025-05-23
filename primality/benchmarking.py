@@ -1,5 +1,7 @@
 import sys
 import random
+import subprocess
+import os
 from typing import List, Dict, Tuple
 
 def miller_rabin_base(n: int, a: int) -> bool:
@@ -54,16 +56,6 @@ def is_prime(n: int) -> bool:
             return False
     return True
 
-def generate_prime(bits: int) -> int:
-    """Generate a prime number with the specified number of bits."""
-    while True:
-        # Generate random odd number
-        n = random.getrandbits(bits) | 1
-        if n.bit_length() != bits:
-            continue
-        if is_prime(n):
-            return n
-
 def generate_test_case(case_type: str = "random") -> Tuple[int, str]:
     """Generate a test case based on the type."""
     if case_type == "small_prime":
@@ -71,7 +63,10 @@ def generate_test_case(case_type: str = "random") -> Tuple[int, str]:
         
     elif case_type == "large_prime":
         # Generate prime with 59-60 bits
-        return generate_prime(random.randint(59, 60)), "PRIME"
+        n = random.getrandbits(random.randint(59, 60)) | 1
+        while not is_prime(n):
+            n = random.getrandbits(random.randint(59, 60)) | 1
+        return n, "PRIME"
         
     elif case_type == "carmichael":
         # Some small Carmichael numbers
@@ -92,8 +87,12 @@ def generate_test_case(case_type: str = "random") -> Tuple[int, str]:
         
     elif case_type == "large_semiprimes":
         # Product of two large primes
-        p = generate_prime(30)
-        q = generate_prime(30)
+        p = random.getrandbits(30) | 1
+        while not is_prime(p):
+            p = random.getrandbits(30) | 1
+        q = random.getrandbits(30) | 1
+        while not is_prime(q):
+            q = random.getrandbits(30) | 1
         return p * q, "COMPOSITE"
         
     else:  # random
@@ -101,37 +100,6 @@ def generate_test_case(case_type: str = "random") -> Tuple[int, str]:
         if n == 1:
             return n, "NEITHER"
         return n, "PRIME" if is_prime(n) else "COMPOSITE"
-
-def verify_solution(test_input: str, expected_output: str, received_output: str) -> bool:
-    """Verify if the received output matches the expected output."""
-    try:
-        # Parse input
-        lines = test_input.strip().split("\n")
-        T = int(lines[0])
-        numbers = [int(lines[i]) for i in range(1, T + 1)]
-        
-        # Parse output
-        received_lines = received_output.strip().split("\n")
-        if len(received_lines) != T:
-            return False
-            
-        # Verify each test case
-        for i, n in enumerate(numbers):
-            received = received_lines[i].strip()
-            if n == 1:
-                if received != "NEITHER":
-                    return False
-            else:
-                is_n_prime = is_prime(n)
-                if is_n_prime and received != "PRIME":
-                    return False
-                if not is_n_prime and received != "COMPOSITE":
-                    return False
-        
-        return True
-        
-    except:
-        return False
 
 def generate_test_cases() -> List[Dict]:
     """Generate various test cases with their expected outputs."""
@@ -180,82 +148,42 @@ def generate_test_cases() -> List[Dict]:
     
     return test_cases
 
-def run_tests(solution_file: str) -> None:
-    """Run all test cases and score the solution."""
-    try:
-        with open(solution_file, 'r') as f:
-            solution_code = f.read()
-        
-        # Create a temporary module to run the solution
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("solution", solution_file)
-        solution = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(solution)
-        
-        test_cases = generate_test_cases()
-        total_score = 0
-        max_score = len(test_cases)
-        
-        for i, case in enumerate(test_cases, 1):
-            try:
-                # Redirect stdin to provide input
-                import io
-                import sys
-                sys.stdin = io.StringIO(case["input"])
-                
-                # Capture stdout
-                from io import StringIO
-                captured_output = StringIO()
-                sys.stdout = captured_output
-                
-                # Run solution with timeout
-                import threading
-                import _thread
-                def run_solution():
-                    solution.main()
-                
-                thread = threading.Thread(target=run_solution)
-                thread.start()
-                thread.join(timeout=2)  # 2 second timeout
-                
-                if thread.is_alive():
-                    _thread.interrupt_main()
-                    raise TimeoutError("Solution took too long")
-                
-                received_output = captured_output.getvalue()
-                
-                # Verify output
-                if verify_solution(case["input"], case["output"], received_output):
-                    total_score += 1
-                    print(f"Test case {i}: Passed")
-                else:
-                    print(f"Test case {i}: Failed")
-                    print(f"Input:")
-                    print(case["input"])
-                    print(f"Expected:")
-                    print(case["output"])
-                    print(f"Received:")
-                    print(received_output.strip())
-                
-            except Exception as e:
-                print(f"Test case {i}: Error - {str(e)}")
-            
-            finally:
-                # Reset stdin and stdout
-                sys.stdin = sys.__stdin__
-                sys.stdout = sys.__stdout__
-        
-        # Calculate and print final score
-        final_score = (total_score / max_score) * 100
-        print(f"\nFinal Score: {final_score:.2f}%")
-        print(f"Passed {total_score} out of {max_score} test cases")
-        
-    except Exception as e:
-        print(f"Error running tests: {str(e)}")
+# Current benchmarking script's filename
+benchmark_file = 'benchmarking.py'
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python benchmarking.py <solution_file>")
-        sys.exit(1)
+# List all .py files in the current directory except this one
+py_files = [f for f in os.listdir('.') if f.endswith('.py') and f != benchmark_file]
+
+results = {}
+
+# Generate test cases once to use for all solutions
+test_cases = generate_test_cases()
+
+for file in py_files:
+    correct = 0
+    total = len(test_cases)
     
-    run_tests(sys.argv[1]) 
+    for case in test_cases:
+        try:
+            # Run the script with input and capture output
+            result = subprocess.run(
+                ['python', file],
+                input=case["input"].encode(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=2  # 2 second timeout per test case
+            )
+            output = result.stdout.decode().strip()
+            if output == case["output"]:
+                correct += 1
+            
+        except Exception as e:
+            pass  # Failed test case
+    
+    results[file] = f"{correct}/{total}"
+
+# Print summary of results
+print("\nScript Evaluation Results:")
+print("-" * 30)
+for script, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
+    print(f"{script}: {score}") 
