@@ -59,43 +59,67 @@ def is_prime(n: int) -> bool:
 def generate_test_case(case_type: str = "random") -> Tuple[int, str]:
     """Generate a test case based on the type."""
     if case_type == "small_prime":
-        return random.choice([2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]), "PRIME"
+        # Small primes under 10^6
+        small_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 
+                       997, 1009, 9973, 99991, 999983]
+        return random.choice(small_primes), "PRIME"
         
     elif case_type == "large_prime":
-        # Generate prime with 59-60 bits
-        n = random.getrandbits(random.randint(59, 60)) | 1
-        while not is_prime(n):
-            n = random.getrandbits(random.randint(59, 60)) | 1
+        # Generate prime near 10^18
+        # Start with a number close to 10^18 and search for next prime
+        start = random.randint(10**17, 10**18)
+        if start % 2 == 0:
+            start += 1
+        n = start
+        while not is_prime(n) and n < 10**18:
+            n += 2
+        if not is_prime(n):  # If we hit 10^18, try going down
+            n = start
+            while not is_prime(n) and n > 10**17:
+                n -= 2
         return n, "PRIME"
         
     elif case_type == "carmichael":
-        # Some small Carmichael numbers
-        carmichael = [561, 1105, 1729, 2465, 2821, 6601, 8911, 10585, 15841, 29341]
+        # Expanded list of Carmichael numbers
+        carmichael = [
+            561, 1105, 1729, 2465, 2821, 6601, 8911, 10585, 15841, 29341,
+            41041, 46657, 52633, 62745, 63973, 75361, 101101, 115921,
+            126217, 162401, 172081, 188461, 252601, 278545, 294409,
+            314821, 334153, 340561, 399001, 410041, 449065, 488881
+        ]
         return random.choice(carmichael), "COMPOSITE"
         
     elif case_type == "perfect_power":
-        # Generate perfect square or cube
-        base = random.randint(2, 1000)
-        power = random.randint(2, 3)
+        # Generate perfect square, cube, or fourth power
+        base = random.randint(2, int(10**4.5))  # Up to ~10^18 when cubed
+        power = random.randint(2, 4)
         return base ** power, "COMPOSITE"
         
     elif case_type == "small_factors":
-        # Generate number with small prime factors
-        p = random.choice([2, 3, 5, 7, 11, 13, 17, 19])
-        q = random.randint(1000, 10000)
-        return p * q, "COMPOSITE"
+        # Generate number with small prime factors but large result
+        small_prime = random.choice([2, 3, 5, 7, 11, 13, 17, 19])
+        # Make sure product is large but under 10^18
+        max_factor = int(10**18 / small_prime)
+        large_factor = random.randint(max_factor // 100, max_factor)
+        return small_prime * large_factor, "COMPOSITE"
         
     elif case_type == "large_semiprimes":
-        # Product of two large primes
-        p = random.getrandbits(30) | 1
-        while not is_prime(p):
-            p = random.getrandbits(30) | 1
-        q = random.getrandbits(30) | 1
-        while not is_prime(q):
-            q = random.getrandbits(30) | 1
+        # Product of two large primes near sqrt(10^18)
+        def generate_prime_near(target):
+            n = target + random.randint(-1000, 1000)
+            if n % 2 == 0:
+                n += 1
+            while not is_prime(n):
+                n += 2
+            return n
+        
+        # Generate two primes near sqrt(10^18) ≈ 10^9
+        p = generate_prime_near(10**9)
+        q = generate_prime_near(10**9)
         return p * q, "COMPOSITE"
         
     else:  # random
+        # Generate random numbers across the full range
         n = random.randint(1, 10**18)
         if n == 1:
             return n, "NEITHER"
@@ -111,39 +135,50 @@ def generate_test_cases() -> List[Dict]:
         "output": "PRIME\nPRIME\nNEITHER\nCOMPOSITE\nPRIME"
     })
     
-    # Test case 2: Small numbers
-    numbers = [2, 3, 4, 5, 6, 7, 8, 9, 10]
-    outputs = ["PRIME" if is_prime(n) else "COMPOSITE" for n in numbers]
-    test_cases.append({
-        "input": f"{len(numbers)}\n" + "\n".join(map(str, numbers)),
-        "output": "\n".join(outputs)
-    })
-    
-    # Test case 3: Special cases
+    # Test case 2: Small numbers and edge cases
     cases = [
         (1, "NEITHER"),
-        generate_test_case("carmichael"),
-        generate_test_case("perfect_power"),
-        generate_test_case("small_factors"),
-        generate_test_case("large_semiprimes")
+        (2, "PRIME"),
+        generate_test_case("small_prime"),
+        (4, "COMPOSITE"),
+        generate_test_case("perfect_power")
     ]
     test_cases.append({
         "input": f"{len(cases)}\n" + "\n".join(str(n) for n, _ in cases),
         "output": "\n".join(result for _, result in cases)
     })
     
-    # Test case 4: Large primes
-    large_cases = [generate_test_case("large_prime") for _ in range(5)]
+    # Test case 3: Carmichael and special composites
+    cases = [
+        generate_test_case("carmichael"),
+        generate_test_case("perfect_power"),
+        generate_test_case("small_factors"),
+        generate_test_case("large_semiprimes"),
+        generate_test_case("carmichael")  # Another Carmichael number
+    ]
     test_cases.append({
-        "input": f"{len(large_cases)}\n" + "\n".join(str(n) for n, _ in large_cases),
-        "output": "\n".join(result for _, result in large_cases)
+        "input": f"{len(cases)}\n" + "\n".join(str(n) for n, _ in cases),
+        "output": "\n".join(result for _, result in cases)
+    })
+    
+    # Test case 4: Large numbers
+    cases = [
+        generate_test_case("large_prime"),
+        generate_test_case("large_semiprimes"),
+        generate_test_case("large_prime"),
+        generate_test_case("small_factors"),
+        generate_test_case("large_prime")
+    ]
+    test_cases.append({
+        "input": f"{len(cases)}\n" + "\n".join(str(n) for n, _ in cases),
+        "output": "\n".join(result for _, result in cases)
     })
     
     # Test case 5: Mixed random cases
-    random_cases = [generate_test_case() for _ in range(10)]
+    cases = [generate_test_case() for _ in range(5)]
     test_cases.append({
-        "input": f"{len(random_cases)}\n" + "\n".join(str(n) for n, _ in random_cases),
-        "output": "\n".join(result for _, result in random_cases)
+        "input": f"{len(cases)}\n" + "\n".join(str(n) for n, _ in cases),
+        "output": "\n".join(result for _, result in cases)
     })
     
     return test_cases

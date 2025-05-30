@@ -49,4 +49,7 @@ def run_benchmarks():
     print("=" * 60)
 
 if __name__ == "__main__":
-    run_benchmarks() 
+    run_benchmarks()
+    # Keep console window open on Windows
+    if sys.platform == 'win32':
+        input("\nPress Enter to close this window...") 

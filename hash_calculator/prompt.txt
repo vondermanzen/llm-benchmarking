@@ -1,9 +1,10 @@
 Problem: Cryptographic Hash Chain Calculator
 
-Your task is to write a program that calculates a complex chain of cryptographic operations on an input string.
+Your task is to write a Python program that calculates a complex chain of cryptographic operations on an input string.
 
 Input Format:
 - A single line containing a string S (1 ≤ |S| ≤ 1000), consisting of printable ASCII characters
+- Note: The program should handle a single input string, not multiple test cases
 
 Output Format:
 - A single line containing the final 64-character hexadecimal hash
@@ -13,7 +14,7 @@ The hash chain should be calculated as follows:
 2. Convert S to UTF-8 bytes
 3. Calculate SHA-256 hash
 4. Convert the result to Base64
-5. Calculate RIPEMD-160 hash
+5. Calculate RIPEMD-160 hash (use hashlib.new('ripemd160'))
 6. Convert to uppercase hex string
 7. Calculate SHA-1 hash
 8. Convert to lowercase hex string
@@ -34,7 +35,7 @@ Let's follow the chain (showing first 10 chars of each step):
 2. → UTF-8: 48656C6C6F2C20576F...
 3. → SHA-256: dffd6021bb2bd5b0...
 4. → Base64: ZGZmZDYwMjFiYjJ...
-5. → RIPEMD-160: f71c35fd4d15...
+5. → RIPEMD-160: f71c35fd4d15... (using hashlib.new('ripemd160'))
 6. → Uppercase: F71C35FD4D15...
 7. → SHA-1: 7b502c3a1f48...
 8. → Lowercase: 7b502c3a1f48...
@@ -45,7 +46,10 @@ Let's follow the chain (showing first 10 chars of each step):
 
 Note:
 - All hex strings should be lowercase
-- Use standard library implementations of hash functions
+- Use standard library implementations of hash functions:
+  * For RIPEMD-160, use hashlib.new('ripemd160')
+  * For all other hashes, use the direct hashlib functions (e.g., hashlib.sha256())
 - All intermediate steps must be exactly as specified
+- The program should handle a single input string, not multiple test cases
 - Time limit: 1 second
 - Memory limit: 256 MB 

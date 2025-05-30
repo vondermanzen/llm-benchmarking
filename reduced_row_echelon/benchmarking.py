@@ -59,28 +59,23 @@ def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
         matrix = []
         # Start with identity matrix
         for i in range(n):
-            row = [0] * n
+            row = [0] * (n + 1)  # +1 for augmented column
             row[i] = 1
+            row[-1] = random.randint(0, 1)  # Random constant term
             matrix.append(row)
         # Add some random operations to mix it up
         for _ in range(n):
             r1, r2 = random.sample(range(n), 2)
-            for j in range(n):
+            for j in range(n + 1):
                 matrix[r1][j] ^= matrix[r2][j]
-        return (
-            f"{n} {n}\n" + "\n".join(" ".join(map(str, row)) for row in matrix),
-            str(n)
-        )
+        return matrix_to_str(matrix), str(n)
         
     elif case_type == "zero_rank":
         # Generate zero matrix
         n = random.randint(3, 6)
         m = random.randint(3, 6)
-        matrix = [[0] * m for _ in range(n)]
-        return (
-            f"{n} {m}\n" + "\n".join(" ".join(map(str, row)) for row in matrix),
-            "0"
-        )
+        matrix = [[0] * (m + 1) for _ in range(n)]  # +1 for augmented column
+        return matrix_to_str(matrix), "0"
         
     elif case_type == "dependent_rows":
         # Generate matrix with some dependent rows
@@ -90,69 +85,55 @@ def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
         matrix = []
         # Generate independent rows
         for i in range(rank):
-            row = [random.randint(0, 1) for _ in range(m)]
-            while all(x == 0 for x in row):  # Ensure non-zero row
-                row = [random.randint(0, 1) for _ in range(m)]
+            row = [random.randint(0, 1) for _ in range(m + 1)]  # +1 for augmented column
+            while all(x == 0 for x in row[:-1]):  # Ensure non-zero row (excluding constant)
+                row = [random.randint(0, 1) for _ in range(m + 1)]
             matrix.append(row)
         # Generate dependent rows
         for i in range(n - rank):
             # Take random combination of existing rows
-            row = [0] * m
+            row = [0] * (m + 1)
             for j in range(rank):
                 if random.random() < 0.5:
-                    for k in range(m):
+                    for k in range(m + 1):
                         row[k] ^= matrix[j][k]
-            if all(x == 0 for x in row):  # If got zero row, use first row
+            if all(x == 0 for x in row[:-1]):  # If got zero row (excluding constant), use first row
                 row = matrix[0][:]
             matrix.append(row)
         # Shuffle rows
         random.shuffle(matrix)
-        return (
-            f"{n} {m}\n" + "\n".join(" ".join(map(str, row)) for row in matrix),
-            str(rank)
-        )
+        return matrix_to_str(matrix), str(rank)
         
     else:  # random
         n = random.randint(3, 6)
         m = random.randint(3, 6)
-        matrix = [[random.randint(0, 1) for _ in range(m)] for _ in range(n)]
-        return (
-            f"{n} {m}\n" + "\n".join(" ".join(map(str, row)) for row in matrix),
-            str(calculate_rank_gf2(matrix))
-        )
+        matrix = [[random.randint(0, 1) for _ in range(m + 1)] for _ in range(n)]  # +1 for augmented column
+        return matrix_to_str(matrix), str(calculate_rank_gf2(matrix))
 
 def generate_test_cases() -> List[Dict]:
     """Generate various test cases with their expected outputs."""
     test_cases = []
     
-    # Test case 1: Example case
+    # Test case 1: Example from prompt
     test_cases.append({
-        "input": "1\n3 3\n1 0 0\n0 1 0\n0 0 1",
+        "input": "3 3\n1 0 1 1\n0 1 1 0\n1 1 0 1",
         "output": "3"
     })
     
-    # Test case 2: Multiple test cases with different types
+    # Test case 2: Different types of matrices
     cases = [
         generate_test_case("full_rank"),
         generate_test_case("zero_rank"),
         generate_test_case("dependent_rows"),
         generate_test_case("random")
     ]
-    combined_input = str(len(cases)) + "\n" + "\n".join(input_str for input_str, _ in cases)
-    combined_output = "\n".join(output for _, output in cases)
-    test_cases.append({
-        "input": combined_input,
-        "output": combined_output
-    })
     
-    # Test case 3: Large random cases
-    random_cases = [generate_test_case("random") for _ in range(5)]
-    combined_input = str(len(random_cases)) + "\n" + "\n".join(input_str for input_str, _ in random_cases)
-    combined_output = "\n".join(output for _, output in random_cases)
-    test_cases.append({
-        "input": combined_input,
-        "output": combined_output
-    })
+    # Add each case individually
+    for input_str, output in cases:
+        test_cases.append({
+            "input": input_str,
+            "output": output
+        })
     
     return test_cases
 

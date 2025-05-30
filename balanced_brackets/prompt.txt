@@ -1,13 +1,14 @@
 Problem: Balanced Brackets
 
-Your task is to write a program that determines whether a sequence of brackets is properly balanced.
+Your task is to write a Python program that determines whether a sequence of brackets is properly balanced.
 
 Input Format:
-- The first line contains a single integer N (1 ≤ N ≤ 10,000), the length of the bracket sequence
+- The first line contains a single integer N (1 ≤ N ≤ 10,000), representing the length of the bracket sequence
 - The second line contains a string of N characters, consisting only of brackets: '(', ')', '[', ']', '{', '}'
 
 Output Format:
-- A single line containing either "YES" if the brackets are balanced, or "NO" if they are not
+- For each test case, output a single line containing either "YES" if the brackets are balanced, or "NO" if they are not
+- Note: The output is case-sensitive, so "Yes" or "yes" will be considered incorrect
 
 A sequence of brackets is considered balanced if:
 1. Every opening bracket has a matching closing bracket of the same type

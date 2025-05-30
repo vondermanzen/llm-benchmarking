@@ -1,6 +1,6 @@
 Problem: Count Strongly Connected Components
 
-Your task is to write a program that counts the number of strongly connected components (SCCs) in a directed graph.
+Your task is to write a Python program that counts the number of strongly connected components (SCCs) in a directed graph.
 
 A strongly connected component is a maximal portion of a directed graph in which there is a directed path from any vertex to every other vertex in that portion.
 

@@ -10,7 +10,7 @@ def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
     if case_type == "single_scc":
         # Generate a cycle
         n = random.randint(3, 10)
-        edges = [(i, (i + 1) % n) for i in range(n)]
+        edges = [(i + 1, (i + 1) % n + 1) for i in range(n)]  # 1-based indexing
         return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), "1"
         
     elif case_type == "no_edges":
@@ -21,16 +21,18 @@ def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
     elif case_type == "chain":
         # Chain of nodes, each node is its own SCC
         n = random.randint(5, 10)
-        edges = [(i, i + 1) for i in range(n - 1)]
+        edges = [(i, i + 1) for i in range(1, n)]  # 1-based indexing
         return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), str(n)
         
     elif case_type == "two_scc":
         # Two strongly connected components
         n = random.randint(6, 10)
         half = n // 2
-        edges = [(i, (i + 1) % half) for i in range(half)]  # First SCC
-        edges += [(i + half, ((i + 1) % half) + half) for i in range(half)]  # Second SCC
-        edges.append((0, half))  # Connect them
+        # First SCC (1-based indexing)
+        edges = [(i, (i % half) + 1) for i in range(1, half + 1)]
+        # Second SCC (1-based indexing)
+        edges += [(i + half, ((i % half) + half + 1)) for i in range(1, half + 1)]
+        edges.append((1, half + 1))  # Connect them
         return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), "2"
         
     else:  # random
@@ -38,8 +40,8 @@ def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
         edge_count = random.randint(n, n * 2)
         edges = []
         for _ in range(edge_count):
-            u = random.randint(0, n - 1)
-            v = random.randint(0, n - 1)
+            u = random.randint(1, n)  # 1-based indexing
+            v = random.randint(1, n)  # 1-based indexing
             edges.append((u, v))
         return (
             f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges),
@@ -68,8 +70,8 @@ def kosaraju_scc(n: int, edges: List[Tuple[int, int]]) -> int:
             dfs1(neighbor)
         finish_order.append(node)
     
-    # Run first DFS on all nodes
-    for node in range(n):
+    # Run first DFS on all nodes (1-based indexing)
+    for node in range(1, n + 1):
         if node not in visited:
             dfs1(node)
     
@@ -105,13 +107,13 @@ def generate_test_cases() -> List[Dict]:
     """Generate various test cases with their expected outputs."""
     test_cases = []
     
-    # Test case 1: Example case
+    # Test case 1: Example from prompt
     test_cases.append({
-        "input": "1\n4 4\n0 1\n1 2\n2 3\n3 1",
+        "input": "4 4\n1 2\n2 3\n3 1\n4 1",
         "output": "2"
     })
     
-    # Test case 2: Multiple test cases with different types
+    # Test case 2: Different types of test cases
     cases = [
         generate_test_case("single_scc"),
         generate_test_case("no_edges"),
@@ -119,21 +121,13 @@ def generate_test_cases() -> List[Dict]:
         generate_test_case("two_scc"),
         generate_test_case("random")
     ]
-    combined_input = str(len(cases)) + "\n" + "\n".join(input_str for input_str, _ in cases)
-    combined_output = "\n".join(output for _, output in cases)
-    test_cases.append({
-        "input": combined_input,
-        "output": combined_output
-    })
     
-    # Test case 3: Large random cases
-    random_cases = [generate_test_case("random") for _ in range(5)]
-    combined_input = str(len(random_cases)) + "\n" + "\n".join(input_str for input_str, _ in random_cases)
-    combined_output = "\n".join(output for _, output in random_cases)
-    test_cases.append({
-        "input": combined_input,
-        "output": combined_output
-    })
+    # Add each case individually
+    for input_str, output in cases:
+        test_cases.append({
+            "input": input_str,
+            "output": output
+        })
     
     return test_cases
 

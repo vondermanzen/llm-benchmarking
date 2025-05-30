@@ -1,6 +1,6 @@
 Problem: SAT Solver
 
-Your task is to write a program that finds a satisfying assignment for a given Boolean formula in Conjunctive Normal Form (CNF).
+Your task is to write a Python program that finds a satisfying assignment for a given Boolean formula in Conjunctive Normal Form (CNF).
 
 Input Format:
 - The first line contains two integers N and M, where:

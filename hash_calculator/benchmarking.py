@@ -60,33 +60,33 @@ def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
     """Generate a test case based on the type."""
     if case_type == "empty":
         # Empty string
-        return "", calculate_hash("")
+        return "", calculate_hash_chain("")
         
     elif case_type == "single_char":
         # Single character
         char = random.choice(string.ascii_letters)
-        return char, calculate_hash(char)
+        return char, calculate_hash_chain(char)
         
     elif case_type == "special_chars":
         # String with special characters
         chars = string.punctuation
         length = random.randint(5, 20)
         text = ''.join(random.choice(chars) for _ in range(length))
-        return text, calculate_hash(text)
+        return text, calculate_hash_chain(text)
         
     elif case_type == "long_string":
         # Long string
         chars = string.ascii_letters + string.digits + string.punctuation + ' '
-        length = random.randint(1000, 2000)
+        length = random.randint(500, 1000)  # Max length 1000 per prompt
         text = ''.join(random.choice(chars) for _ in range(length))
-        return text, calculate_hash(text)
+        return text, calculate_hash_chain(text)
         
     else:  # random
         # Random string of random length
         chars = string.ascii_letters + string.digits + ' '
         length = random.randint(10, 100)
         text = ''.join(random.choice(chars) for _ in range(length))
-        return text, calculate_hash(text)
+        return text, calculate_hash_chain(text)
 
 def verify_solution(test_input: str, expected_output: str, received_output: str) -> bool:
     """Verify if the received output matches the expected output."""
@@ -107,13 +107,13 @@ def generate_test_cases() -> List[Dict]:
     """Generate various test cases with their expected outputs."""
     test_cases = []
     
-    # Test case 1: Example case
+    # Test case 1: Example from prompt
     test_cases.append({
-        "input": "1\nHello, World!",
-        "output": "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
+        "input": "Hello, World!",
+        "output": "a9842d666c6d9a334d8987a0628c68d5302e9251c7e9f0168f7b5dd2b7ff2763c9ae92b6e4c574e4ba05c3108468db17"
     })
     
-    # Test case 2: Multiple test cases with different types
+    # Test case 2: Different types of strings
     cases = [
         generate_test_case("empty"),
         generate_test_case("single_char"),
@@ -121,21 +121,13 @@ def generate_test_cases() -> List[Dict]:
         generate_test_case("long_string"),
         generate_test_case("random")
     ]
-    combined_input = str(len(cases)) + "\n" + "\n".join(input_str for input_str, _ in cases)
-    combined_output = "\n".join(output for _, output in cases)
-    test_cases.append({
-        "input": combined_input,
-        "output": combined_output
-    })
     
-    # Test case 3: Large random cases
-    random_cases = [generate_test_case("random") for _ in range(5)]
-    combined_input = str(len(random_cases)) + "\n" + "\n".join(input_str for input_str, _ in random_cases)
-    combined_output = "\n".join(output for _, output in random_cases)
-    test_cases.append({
-        "input": combined_input,
-        "output": combined_output
-    })
+    # Add each case individually
+    for input_str, output in cases:
+        test_cases.append({
+            "input": input_str,
+            "output": output
+        })
     
     return test_cases
 

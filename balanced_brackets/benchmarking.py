@@ -28,35 +28,83 @@ def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
         closing = [')', '}', ']']
         stack = []
         
-        for i in range(n * 2):
-            if i < n:  # First half: mostly opening brackets
+        # Generate nested structure
+        def generate_nested(depth, max_depth):
+            if depth >= max_depth or random.random() < 0.3:
+                # Generate simple pair
                 bracket_type = random.randint(0, 2)
-                brackets.append(opening[bracket_type])
-                stack.append(closing[bracket_type])
-            else:  # Second half: matching closing brackets
-                brackets.append(stack.pop())
-                
-        return "".join(brackets), "1"
+                return opening[bracket_type] + closing[bracket_type]
+            
+            # Generate nested structure
+            bracket_type = random.randint(0, 2)
+            inner = generate_nested(depth + 1, max_depth)
+            return opening[bracket_type] + inner + closing[bracket_type]
         
-    elif case_type == "always_unbalanced":
-        # Generate clearly unbalanced brackets
-        n = random.randint(3, 10)
+        result = generate_nested(0, 4)  # Up to 4 levels of nesting
+        return result, "YES"
+        
+    elif case_type == "max_length":
+        # Generate sequence close to max length (10,000)
+        n = random.randint(9900, 10000)
+        if n % 2 == 1:  # Ensure even length
+            n -= 1
+            
         brackets = []
+        stack = []
         opening = ['(', '{', '[']
         closing = [')', '}', ']']
         
-        # Add n opening brackets
-        for _ in range(n):
-            brackets.append(random.choice(opening))
-        # Add n-1 closing brackets
-        for _ in range(n-1):
-            brackets.append(random.choice(closing))
+        # Fill first half with opening brackets
+        for i in range(n // 2):
+            bracket_type = random.randint(0, 2)
+            brackets.append(opening[bracket_type])
+            stack.append(closing[bracket_type])
             
-        return "".join(brackets), "0"
+        # Add matching closing brackets
+        brackets.extend(reversed(stack))
+        return "".join(brackets), "YES"
+        
+    elif case_type == "almost_balanced":
+        # Generate almost balanced sequence with one error
+        n = random.randint(10, 20)
+        brackets = []
+        stack = []
+        opening = ['(', '{', '[']
+        closing = [')', '}', ']']
+        
+        # Generate balanced sequence
+        for i in range(n):
+            if not stack or random.random() < 0.6:
+                bracket_type = random.randint(0, 2)
+                brackets.append(opening[bracket_type])
+                stack.append(closing[bracket_type])
+            else:
+                brackets.append(stack.pop())
+                
+        # Add all remaining closing brackets
+        brackets.extend(reversed(stack))
+        
+        # Introduce one error
+        error_type = random.randint(0, 2)
+        if error_type == 0:  # Wrong closing bracket
+            pos = random.randint(0, len(brackets) - 1)
+            while brackets[pos] not in closing:
+                pos = random.randint(0, len(brackets) - 1)
+            brackets[pos] = random.choice([c for c in closing if c != brackets[pos]])
+        elif error_type == 1:  # Extra closing bracket
+            pos = random.randint(0, len(brackets))
+            brackets.insert(pos, random.choice(closing))
+        else:  # Missing closing bracket
+            pos = random.randint(0, len(brackets) - 1)
+            while brackets[pos] not in closing:
+                pos = random.randint(0, len(brackets) - 1)
+            brackets.pop(pos)
+            
+        return "".join(brackets), "NO"
         
     elif case_type == "empty":
         # Empty string is considered balanced
-        return "", "1"
+        return "", "YES"
         
     else:  # random
         n = random.randint(4, 20)
@@ -87,40 +135,49 @@ def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
         if not make_unbalanced:
             brackets.extend(reversed(stack))
             
-        return "".join(brackets), "1" if is_balanced("".join(brackets)) else "0"
+        return "".join(brackets), "YES" if is_balanced("".join(brackets)) else "NO"
 
 def generate_test_cases() -> List[Dict]:
     """Generate various test cases with their expected outputs."""
     test_cases = []
     
-    # Test case 1: Example case
-    test_cases.append({
-        "input": "1\n{[()]}",
-        "output": "1"
-    })
+    # Test case 1: Examples from prompt
+    examples = [
+        ("6\n{[()]}", "YES"),  # Example 1
+        ("4\n{[}]", "NO"),     # Example 2
+        ("2\n)(", "NO")        # Example 3
+    ]
+    for input_str, output in examples:
+        test_cases.append({
+            "input": input_str,
+            "output": output
+        })
     
-    # Test case 2: Multiple test cases with different types
+    # Test case 2: Edge cases
+    cases = [
+        ("0\n", "YES"),  # Empty string
+        ("1\n(", "NO"),  # Single opening bracket
+        ("1\n)", "NO"),  # Single closing bracket
+        ("2\n{}", "YES"),  # Simple pair
+        ("6\n((()))", "YES")  # Multiple same type
+    ]
+    for input_str, output in cases:
+        test_cases.append({
+            "input": input_str,
+            "output": output
+        })
+    
+    # Test case 3: Special cases
     cases = [
         generate_test_case("always_balanced"),
-        generate_test_case("always_unbalanced"),
-        generate_test_case("empty"),
-        generate_test_case("random")
+        generate_test_case("almost_balanced"),
+        generate_test_case("max_length")
     ]
-    combined_input = str(len(cases)) + "\n" + "\n".join(input_str for input_str, _ in cases)
-    combined_output = "\n".join(output for _, output in cases)
-    test_cases.append({
-        "input": combined_input,
-        "output": combined_output
-    })
-    
-    # Test case 3: Large random cases
-    random_cases = [generate_test_case("random") for _ in range(5)]
-    combined_input = str(len(random_cases)) + "\n" + "\n".join(input_str for input_str, _ in random_cases)
-    combined_output = "\n".join(output for _, output in random_cases)
-    test_cases.append({
-        "input": combined_input,
-        "output": combined_output
-    })
+    for input_str, output in cases:
+        test_cases.append({
+            "input": f"{len(input_str)}\n{input_str}",
+            "output": output
+        })
     
     return test_cases
 
