@@ -208,8 +208,10 @@ for file in py_files:
                 stderr=subprocess.PIPE,
                 timeout=2  # 2 second timeout per test case
             )
-            output = result.stdout.decode().strip()
-            if output == case["output"]:
+            # Normalize line endings by splitting and joining
+            output = "\n".join(result.stdout.decode().strip().splitlines())
+            expected = "\n".join(case["output"].splitlines())
+            if output == expected:
                 correct += 1
             
         except Exception as e:

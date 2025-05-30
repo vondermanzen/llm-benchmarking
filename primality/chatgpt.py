@@ -1,8 +1,8 @@
 def is_prime(n):
     if n == 1:
         return "NEITHER"
-    if n == 2 or n == 3:
-        return "PRIME"
+    if n < 4:
+        return "PRIME"  # 2 and 3 are prime
     if n % 2 == 0:
         return "COMPOSITE"
 
@@ -13,9 +13,9 @@ def is_prime(n):
         d //= 2
         s += 1
 
-    # Deterministic Miller-Rabin test for n < 2^64
-    # These bases are sufficient to guarantee correctness for n < 3.3e18
-    bases = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
+    # Deterministic Miller-Rabin for 64-bit integers
+    # These bases are enough for n < 2^64
+    witnesses = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
 
     def try_composite(a):
         x = pow(a, d, n)
@@ -27,14 +27,15 @@ def is_prime(n):
                 return False
         return True  # Composite
 
-    for base in bases:
-        if base >= n:
+    for a in witnesses:
+        if a >= n:
             continue
-        if try_composite(base):
+        if try_composite(a):
             return "COMPOSITE"
+
     return "PRIME"
 
-# Reading input
+# Input reading
 T = int(input())
 for _ in range(T):
     N = int(input())
