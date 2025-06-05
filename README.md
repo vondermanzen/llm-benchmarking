@@ -44,25 +44,6 @@ Each problem includes a `cancre.py` (French for "dunce") that provides a minimal
    - Test cases cover various edge cases and performance requirements
    - Results are automatically scored and documented
 
-### Key Principles
-
-1. **Consistency with Adaptability**
-   - Base problems and evaluation criteria remain constant across all LLMs
-   - Prompt engineering may be necessary for different LLMs:
-     * Some LLMs may attempt to create full applications instead of focused solutions
-     * Others may require specific guidance to produce extractable code
-   - Testing infrastructure and scoring remain standardized regardless of prompt adaptations
-
-2. **Non-Intervention**
-   - Contributors must not modify or optimize the LLM's code
-   - Any necessary clarifications should be made through prompt refinement only
-
-3. **Transparency**
-   - All prompts, test cases, and evaluation criteria are publicly available
-   - The testing process is documented and reproducible
-   - Results can be independently verified
-   - All prompt modifications must be documented and justified
-
 ## Usage for Contributors
 
 1. Clone this repository
