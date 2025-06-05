@@ -35,7 +35,7 @@ def run_benchmarks():
         try:
             # Change to benchmark directory and run
             os.chdir(os.path.join(root_dir, directory))
-            subprocess.run([sys.executable, 'benchmarking.py'], check=True)
+            subprocess.run([sys.executable, 'benchmarking.py', '--no-details'], check=True)
         except subprocess.CalledProcessError as e:
             print(f"Error running benchmark in {directory}: {e}")
         except Exception as e:
