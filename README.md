@@ -77,3 +77,8 @@ Conduct the generation in an isolated environment to prevent LLMs from accessing
 Run run_all_tests.py
 
 ![Usage](usage.png)
+
+or run generate_plot.py
+
+![Plot](plot.png)
+
