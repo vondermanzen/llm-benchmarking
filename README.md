@@ -71,3 +71,9 @@ Each problem includes a `cancre.py` (French for "dunce") that provides a minimal
 4. Extract the LLM's solution into a new Python file in the same directory with the assistant's name
 
 Conduct the generation in an isolated environment to prevent LLMs from accessing each other's solutions
+
+## Usage
+
+Run run_all_tests.py
+
+![Usage](usage.png)
