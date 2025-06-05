@@ -1,5 +1,4 @@
 import sys
-import random
 import subprocess
 import os
 from typing import List, Dict, Set, Optional, Tuple
@@ -81,13 +80,6 @@ def solve_sat(n: int, clauses: List[List[int]]) -> Optional[List[int]]:
         return assignment
     return None
 
-def format_cnf(n: int, clauses: List[List[int]]) -> str:
-    """Convert clauses to input string format."""
-    result = [f"{n} {len(clauses)}"]
-    for clause in clauses:
-        result.append(" ".join(map(str, clause + [0])))
-    return "\n".join(result)
-
 def verify_sat_solution(n: int, clauses: List[List[int]], assignment: List[int]) -> bool:
     """Verify if the assignment satisfies all clauses."""
     if len(assignment) != n:
@@ -106,180 +98,78 @@ def verify_sat_solution(n: int, clauses: List[List[int]], assignment: List[int])
             return False
     return True
 
-def dpll(n: int, clauses: List[List[int]]) -> Tuple[bool, List[int]]:
-    """Reference DPLL implementation."""
-    def unit_propagate(clauses, assignment):
-        """Find and apply unit clauses."""
-        unit_found = True
-        while unit_found:
-            unit_found = False
-            for clause in clauses:
-                unassigned = []
-                satisfied = False
-                for lit in clause:
-                    var = abs(lit)
-                    if assignment[var - 1] == -1:
-                        unassigned.append(lit)
-                    elif (lit > 0 and assignment[var - 1] == 1) or \
-                         (lit < 0 and assignment[var - 1] == 0):
-                        satisfied = True
-                        break
-                if satisfied:
-                    continue
-                if len(unassigned) == 1:
-                    unit_found = True
-                    lit = unassigned[0]
-                    var = abs(lit)
-                    assignment[var - 1] = 1 if lit > 0 else 0
-                    break
-        return assignment
-
-    def dpll_recursive(clauses, assignment):
-        # Unit propagation
-        assignment = unit_propagate(clauses, assignment)
-        
-        # Check if all clauses are satisfied
-        all_satisfied = True
-        for clause in clauses:
-            satisfied = False
-            for lit in clause:
-                var = abs(lit)
-                if (lit > 0 and assignment[var - 1] == 1) or \
-                   (lit < 0 and assignment[var - 1] == 0):
-                    satisfied = True
-                    break
-            if not satisfied:
-                all_satisfied = False
-                break
-        
-        if all_satisfied:
-            return True, assignment
-            
-        # Check if any clause is unsatisfied
-        for clause in clauses:
-            satisfied = False
-            possible = False
-            for lit in clause:
-                var = abs(lit)
-                if assignment[var - 1] == -1:
-                    possible = True
-                elif (lit > 0 and assignment[var - 1] == 1) or \
-                     (lit < 0 and assignment[var - 1] == 0):
-                    satisfied = True
-                    break
-            if not satisfied and not possible:
-                return False, assignment
-        
-        # Choose a variable to branch on
-        for i in range(n):
-            if assignment[i] == -1:
-                # Try assignment[i] = 1
-                assignment[i] = 1
-                result, new_assignment = dpll_recursive(clauses, assignment[:])
-                if result:
-                    return True, new_assignment
-                    
-                # Try assignment[i] = 0
-                assignment[i] = 0
-                result, new_assignment = dpll_recursive(clauses, assignment[:])
-                if result:
-                    return True, new_assignment
-                    
-                assignment[i] = -1
-                return False, assignment
-                
-        return False, assignment
-
-    assignment = [-1] * n  # -1 means unassigned
-    return dpll_recursive(clauses, assignment)
-
-def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
-    """Generate a test case based on the type."""
-    if case_type == "always_sat":
-        # Generate formula that's always satisfiable
-        n = random.randint(3, 5)
-        m = random.randint(3, 8)
-        clauses = []
-        for _ in range(m):
-            var = random.randint(1, n)
-            clauses.append([var])  # Unit clause, always satisfiable
-        formula = f"{n} {m}\n" + "\n".join(" ".join(map(str, clause)) for clause in clauses)
-        return formula, "SAT\n" + " ".join("1" for _ in range(n))
-        
-    elif case_type == "always_unsat":
-        # Generate formula that's never satisfiable
-        n = random.randint(2, 4)
-        clauses = []
-        # Add both x and not x for some variable
-        var = random.randint(1, n)
-        clauses.append([var])
-        clauses.append([-var])
-        formula = f"{n} 2\n" + "\n".join(" ".join(map(str, clause)) for clause in clauses)
-        return formula, "UNSAT"
-        
-    elif case_type == "single_solution":
-        # Generate formula with exactly one solution
-        n = random.randint(3, 5)
-        solution = [random.randint(0, 1) for _ in range(n)]
-        clauses = []
-        # Add clauses that force this solution
-        for i in range(n):
-            clauses.append([i + 1 if solution[i] else -(i + 1)])
-        formula = f"{n} {len(clauses)}\n" + "\n".join(" ".join(map(str, clause)) for clause in clauses)
-        return formula, "SAT\n" + " ".join(map(str, solution))
-        
-    else:  # random
-        n = random.randint(3, 5)
-        m = random.randint(3, 8)
-        clauses = []
-        for _ in range(m):
-            clause_size = random.randint(1, 3)
-            clause = []
-            for _ in range(clause_size):
-                var = random.randint(1, n)
-                sign = random.choice([-1, 1])
-                clause.append(sign * var)
-            clauses.append(clause)
-        
-        # Solve with DPLL to determine if satisfiable
-        is_sat, assignment = dpll(n, clauses)
-        formula = f"{n} {m}\n" + "\n".join(" ".join(map(str, clause)) for clause in clauses)
-        if is_sat:
-            return formula, "SAT\n" + " ".join(map(str, assignment))
-        else:
-            return formula, "UNSAT"
-
 def generate_test_cases() -> List[Dict]:
-    """Generate various test cases with their expected outputs."""
+    """Generate hardcoded test cases with their expected outputs."""
     test_cases = []
     
-    # Test case 1: Example case
+    # Test case 1: Simple satisfiable case
     test_cases.append({
-        "input": "1\n2 2\n1 2\n-1 -2",
-        "output": "SAT\n0 0"
+        "input": "2 2\n1 2 0\n-1 -2 0",
+        "output": "SAT\n0 0",
+        "description": "Simple SAT - (x1∨x2)∧(¬x1∨¬x2) accepts any valid assignment"
     })
     
-    # Test case 2: Multiple test cases with different types
-    cases = [
-        generate_test_case("always_sat"),
-        generate_test_case("always_unsat"),
-        generate_test_case("single_solution"),
-        generate_test_case("random")
-    ]
-    combined_input = str(len(cases)) + "\n" + "\n".join(input_str for input_str, _ in cases)
-    combined_output = "\n".join(output for _, output in cases)
+    # Test case 2: Simple unsatisfiable case
     test_cases.append({
-        "input": combined_input,
-        "output": combined_output
+        "input": "1 2\n1 0\n-1 0",
+        "output": "UNSAT",
+        "description": "Simple UNSAT - contradictory unit clauses x1 and ¬x1"
     })
     
-    # Test case 3: Large random cases
-    random_cases = [generate_test_case("random") for _ in range(5)]
-    combined_input = str(len(random_cases)) + "\n" + "\n".join(input_str for input_str, _ in random_cases)
-    combined_output = "\n".join(output for _, output in random_cases)
+    # Test case 3: Single variable satisfiable
     test_cases.append({
-        "input": combined_input,
-        "output": combined_output
+        "input": "1 1\n1 0",
+        "output": "SAT\n1",
+        "description": "Single variable SAT - x1 must be true (only one valid assignment)"
+    })
+    
+    # Test case 4: Three variables, satisfiable
+    test_cases.append({
+        "input": "3 3\n1 2 3 0\n-1 2 0\n-2 3 0",
+        "output": "SAT\n0 1 1",
+        "description": "3-SAT satisfiable - (x1∨x2∨x3)∧(¬x1∨x2)∧(¬x2∨x3) has valid assignments"
+    })
+    
+    # Test case 5: Horn clauses, unsatisfiable  
+    test_cases.append({
+        "input": "3 4\n1 0\n-1 2 0\n-2 3 0\n-3 0",
+        "output": "UNSAT",
+        "description": "Horn clauses UNSAT - unit propagation leads to contradiction"
+    })
+    
+    # Test case 6: Unsatisfiable 3-SAT
+    test_cases.append({
+        "input": "2 4\n1 2 0\n1 -2 0\n-1 2 0\n-1 -2 0",
+        "output": "UNSAT",
+        "description": "UNSAT 3-SAT - all possible assignments of x1,x2 lead to contradiction"
+    })
+    
+    # Test case 7: Example from prompt
+    test_cases.append({
+        "input": "3 2\n1 2 0\n-1 -2 3 0",
+        "output": "SAT\n0 0 1",
+        "description": "Example from prompt - (x1∨x2)∧(¬x1∨¬x2∨x3) has multiple valid assignments"
+    })
+    
+    # Test case 8: Larger satisfiable case
+    test_cases.append({
+        "input": "4 5\n1 2 0\n-1 3 0\n-2 4 0\n-3 -4 0\n1 4 0",
+        "output": "SAT\n1 1 1 0",
+        "description": "4-variable SAT with implication chain - multiple valid assignments"
+    })
+    
+    # Test case 9: Empty clause (immediately UNSAT)
+    test_cases.append({
+        "input": "2 3\n1 2 0\n0\n-1 -2 0",
+        "output": "UNSAT",
+        "description": "Empty clause makes formula immediately UNSAT"
+    })
+    
+    # Test case 10: Tautology clauses (should be SAT)
+    test_cases.append({
+        "input": "2 2\n1 -1 0\n2 -2 0",
+        "output": "SAT\n0 0",
+        "description": "Tautology clauses - always satisfiable with any assignment"
     })
     
     return test_cases
@@ -291,6 +181,7 @@ benchmark_file = 'benchmarking.py'
 py_files = [f for f in os.listdir('.') if f.endswith('.py') and f != benchmark_file]
 
 results = {}
+detailed_results = {}
 
 # Generate test cases once to use for all solutions
 test_cases = generate_test_cases()
@@ -298,8 +189,9 @@ test_cases = generate_test_cases()
 for file in py_files:
     correct = 0
     total = len(test_cases)
+    failed_cases = []
     
-    for case in test_cases:
+    for i, case in enumerate(test_cases):
         try:
             # Run the script with input and capture output
             result = subprocess.run(
@@ -311,39 +203,123 @@ for file in py_files:
             )
             output = result.stdout.decode().strip()
             
-            # Special handling for SAT problems
-            # If the output is SAT, verify the solution
-            lines = output.split("\n")
-            expected_lines = case["output"].split("\n")
-            if len(lines) > 0 and len(expected_lines) > 0:
-                if expected_lines[0] == "UNSAT":
-                    if lines[0] == "UNSAT":
-                        correct += 1
-                elif expected_lines[0] == "SAT" and lines[0] == "SAT":
-                    # Parse the input to get n and clauses
-                    input_lines = case["input"].split("\n")
-                    if input_lines[0] == "1":  # Single test case
-                        n, m = map(int, input_lines[1].split())
-                        clauses = []
-                        for i in range(m):
-                            clause = list(map(int, input_lines[i + 2].split()))
-                            clauses.append(clause)
-                        # Parse the solution
-                        if len(lines) > 1:
-                            try:
-                                solution = list(map(int, lines[1].split()))
-                                if verify_sat_solution(n, clauses, solution):
-                                    correct += 1
-                            except:
-                                pass
+            # Parse the single test case
+            input_lines = case["input"].split("\n")
+            n, m = map(int, input_lines[0].split())
             
+            clauses = []
+            for clause_idx in range(1, m + 1):
+                if clause_idx < len(input_lines):
+                    clause = list(map(int, input_lines[clause_idx].split()[:-1]))  # Remove trailing 0
+                    clauses.append(clause)
+            
+            # Check the output
+            expected_outputs = case["output"].split("\n")
+            actual_outputs = output.split("\n") if output else []
+            
+            test_passed = True
+            failure_reason = ""
+            
+            if len(actual_outputs) < len(expected_outputs):
+                test_passed = False
+                failure_reason = f"Expected {len(expected_outputs)} output lines, got {len(actual_outputs)}"
+            else:
+                expected_result = expected_outputs[0]
+                actual_result = actual_outputs[0] if actual_outputs else ""
+                
+                if expected_outputs[0] == "UNSAT":
+                    if actual_result != "UNSAT":
+                        test_passed = False
+                        failure_reason = f"Expected UNSAT, got '{actual_result}'"
+                elif expected_outputs[0] == "SAT":
+                    if actual_result.strip() != "SAT":
+                        test_passed = False
+                        failure_reason = f"Expected SAT, got '{actual_result}'"
+                    else:
+                        # Verify the assignment - accept ANY valid assignment
+                        if len(actual_outputs) < 2:
+                            test_passed = False
+                            failure_reason = "Missing assignment for SAT"
+                        else:
+                            try:
+                                assignment = list(map(int, actual_outputs[1].split()))
+                                if len(assignment) != n:
+                                    test_passed = False
+                                    failure_reason = f"Assignment length {len(assignment)} != {n} variables"
+                                elif not verify_sat_solution(n, clauses, assignment):
+                                    test_passed = False
+                                    failure_reason = f"Invalid assignment {assignment} - doesn't satisfy all clauses"
+                                else:
+                                    # Assignment is valid! Accept it regardless of what our expected output was
+                                    test_passed = True
+                                    failure_reason = ""  # Clear any previous failure reason
+                            except (ValueError, IndexError) as e:
+                                test_passed = False
+                                failure_reason = f"Malformed assignment: {e}"
+                else:
+                    test_passed = False
+                    failure_reason = f"Unexpected expected result: {expected_outputs[0]}"
+            
+            if test_passed:
+                correct += 1
+            else:
+                failed_cases.append({
+                    'case_num': i + 1,
+                    'description': case.get('description', f'Test case {i + 1}'),
+                    'input': case["input"],
+                    'expected': case["output"],
+                    'actual': output,
+                    'failure_reason': failure_reason,
+                    'stderr': result.stderr.decode().strip() if result.stderr else None
+                })
+                
         except Exception as e:
-            pass  # Failed test case
+            failed_cases.append({
+                'case_num': i + 1,
+                'description': case.get('description', f'Test case {i + 1}'),
+                'input': case["input"],
+                'expected': case["output"],
+                'actual': 'ERROR',
+                'error': str(e)
+            })
     
     results[file] = f"{correct}/{total}"
+    detailed_results[file] = failed_cases
 
 # Print summary of results
 print("\nScript Evaluation Results:")
 print("-" * 30)
 for script, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
-    print(f"{script}: {score}") 
+    print(f"{script}: {score}")
+
+# Only show detailed failure analysis if not called from parent script
+show_details = True
+if len(sys.argv) > 1 and sys.argv[1] == "--no-details":
+    show_details = False
+elif os.path.basename(os.getcwd()) != os.path.basename(os.path.dirname(__file__)):
+    # If current working directory is not the script's directory, likely called from parent
+    show_details = False
+
+if show_details:
+    # Print detailed failure information
+    print("\nDetailed Failure Analysis:")
+    print("=" * 50)
+    for script in sorted(py_files):
+        score = results[script]
+        if detailed_results[script]:
+            print(f"\n{script} - {score} - Failed Cases:")
+            print("-" * 30)
+            for failure in detailed_results[script]:
+                print(f"Test Case {failure['case_num']}: {failure['description']}")
+                print(f"Input:\n{failure['input']}")
+                print(f"Expected: {failure['expected']}")
+                print(f"Actual: {failure['actual']}")
+                if 'failure_reason' in failure:
+                    print(f"Reason: {failure['failure_reason']}")
+                if 'error' in failure:
+                    print(f"Error: {failure['error']}")
+                if failure.get('stderr'):
+                    print(f"Stderr: {failure['stderr']}")
+                print()
+        else:
+            print(f"\n{script}: {score}") 

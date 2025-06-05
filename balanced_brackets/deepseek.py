@@ -1,15 +1,21 @@
-n = int(input())
+n = int(input().strip())
 s = input().strip()
 
-def is_balanced(s):
-    stack = []
-    mapping = {')': '(', ']': '[', '}': '{'}
-    for char in s:
-        if char in mapping.values():
-            stack.append(char)
-        elif char in mapping.keys():
-            if not stack or stack[-1] != mapping[char]:
-                return False
-            stack.pop()
-        else:
-            return False  # invalid
+mapping = {')': '(', ']': '[', '}': '{'}
+stack = []
+
+for c in s:
+    if c in '([{':
+        stack.append(c)
+    else:
+        if not stack:
+            print("NO")
+            break
+        if stack.pop() != mapping[c]:
+            print("NO")
+            break
+else:
+    if not stack:
+        print("YES")
+    else:
+        print("NO")

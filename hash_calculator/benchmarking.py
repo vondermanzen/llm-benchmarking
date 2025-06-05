@@ -1,10 +1,8 @@
 import sys
-import random
-import string
-import hashlib
-import base64
 import subprocess
 import os
+import hashlib
+import base64
 from typing import List, Dict, Tuple
 
 def calculate_hash_chain(input_str: str) -> str:
@@ -20,10 +18,10 @@ def calculate_hash_chain(input_str: str) -> str:
         current = hashlib.sha256(current).digest()
         
         # 4. Convert to Base64
-        current = base64.b64encode(current).decode('ascii')
+        current = base64.b64encode(current)
         
         # 5. Calculate RIPEMD-160 hash
-        current = hashlib.new('ripemd160', current.encode('utf-8')).digest()
+        current = hashlib.new('ripemd160', current).digest()
         
         # 6. Convert to uppercase hex
         current = current.hex().upper()
@@ -52,51 +50,12 @@ def calculate_hash_chain(input_str: str) -> str:
         print(f"Error in reference solution: {str(e)}")
         return None
 
-def calculate_hash(text: str) -> str:
-    """Reference implementation for calculating hash."""
-    return hashlib.sha256(text.encode()).hexdigest()
-
-def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
-    """Generate a test case based on the type."""
-    if case_type == "empty":
-        # Empty string
-        return "", calculate_hash_chain("")
-        
-    elif case_type == "single_char":
-        # Single character
-        char = random.choice(string.ascii_letters)
-        return char, calculate_hash_chain(char)
-        
-    elif case_type == "special_chars":
-        # String with special characters
-        chars = string.punctuation
-        length = random.randint(5, 20)
-        text = ''.join(random.choice(chars) for _ in range(length))
-        return text, calculate_hash_chain(text)
-        
-    elif case_type == "long_string":
-        # Long string
-        chars = string.ascii_letters + string.digits + string.punctuation + ' '
-        length = random.randint(500, 1000)  # Max length 1000 per prompt
-        text = ''.join(random.choice(chars) for _ in range(length))
-        return text, calculate_hash_chain(text)
-        
-    else:  # random
-        # Random string of random length
-        chars = string.ascii_letters + string.digits + ' '
-        length = random.randint(10, 100)
-        text = ''.join(random.choice(chars) for _ in range(length))
-        return text, calculate_hash_chain(text)
-
 def verify_solution(test_input: str, expected_output: str, received_output: str) -> bool:
     """Verify if the received output matches the expected output."""
     try:
-        # Calculate correct hash
-        correct_hash = calculate_hash_chain(test_input)
-        
         # Clean and compare outputs
         received = received_output.strip().lower()
-        expected = correct_hash.lower()
+        expected = expected_output.lower()
         
         return received == expected
         
@@ -104,30 +63,107 @@ def verify_solution(test_input: str, expected_output: str, received_output: str)
         return False
 
 def generate_test_cases() -> List[Dict]:
-    """Generate various test cases with their expected outputs."""
+    """Generate hardcoded test cases with their expected outputs."""
     test_cases = []
     
     # Test case 1: Example from prompt
     test_cases.append({
         "input": "Hello, World!",
-        "output": "a9842d666c6d9a334d8987a0628c68d5302e9251c7e9f0168f7b5dd2b7ff2763c9ae92b6e4c574e4ba05c3108468db17"
+        "output": calculate_hash_chain("Hello, World!"),
+        "description": "Example from prompt - standard greeting string"
     })
     
-    # Test case 2: Different types of strings
-    cases = [
-        generate_test_case("empty"),
-        generate_test_case("single_char"),
-        generate_test_case("special_chars"),
-        generate_test_case("long_string"),
-        generate_test_case("random")
-    ]
+    # Test case 2: Empty string
+    test_cases.append({
+        "input": "\n",
+        "output": calculate_hash_chain(""),
+        "description": "Empty string - edge case"
+    })
     
-    # Add each case individually
-    for input_str, output in cases:
-        test_cases.append({
-            "input": input_str,
-            "output": output
-        })
+    # Test case 3: Single character
+    test_cases.append({
+        "input": "a",
+        "output": calculate_hash_chain("a"),
+        "description": "Single lowercase letter"
+    })
+    
+    # Test case 4: Single uppercase character
+    test_cases.append({
+        "input": "A",
+        "output": calculate_hash_chain("A"),
+        "description": "Single uppercase letter"
+    })
+    
+    # Test case 5: Numbers only
+    test_cases.append({
+        "input": "123456789",
+        "output": calculate_hash_chain("123456789"),
+        "description": "Numeric string - digits only"
+    })
+    
+    # Test case 6: Special characters
+    test_cases.append({
+        "input": "!@#$%^&*()",
+        "output": calculate_hash_chain("!@#$%^&*()"),
+        "description": "Special characters - symbols and punctuation"
+    })
+    
+    # Test case 7: Mixed case with spaces
+    test_cases.append({
+        "input": "The Quick Brown Fox",
+        "output": calculate_hash_chain("The Quick Brown Fox"),
+        "description": "Mixed case letters with spaces"
+    })
+
+    
+    # Test case 8: JSON-like string
+    test_cases.append({
+        "input": '{"key": "value", "number": 42}',
+        "output": calculate_hash_chain('{"key": "value", "number": 42}'),
+        "description": "JSON-like string with quotes and braces"
+    })
+    
+    # Test case 9: Long string with repeating pattern
+    test_cases.append({
+        "input": "abcdefghijklmnopqrstuvwxyz" * 10,
+        "output": calculate_hash_chain("abcdefghijklmnopqrstuvwxyz" * 10),
+        "description": "Long string - 260 characters of repeating alphabet"
+    })
+    
+    # Test case 10: Base64-like string
+    test_cases.append({
+        "input": "SGVsbG8gV29ybGQ=",
+        "output": calculate_hash_chain("SGVsbG8gV29ybGQ="),
+        "description": "Base64-like string with padding"
+    })
+    
+    # Test case 11: Programming code snippet  
+    test_cases.append({
+        "input": "def hello(): print('Hello!')",
+        "output": calculate_hash_chain("def hello(): print('Hello!')"),
+        "description": "Python code snippet without newlines"
+    })
+    
+    # Test case 12: SQL injection attempt
+    test_cases.append({
+        "input": "'; DROP TABLE users; --",
+        "output": calculate_hash_chain("'; DROP TABLE users; --"),
+        "description": "SQL injection string - security testing"
+    })
+    
+    # Test case 13: XML/HTML tags
+    test_cases.append({
+        "input": "<html><body>Test</body></html>",
+        "output": calculate_hash_chain("<html><body>Test</body></html>"),
+        "description": "HTML/XML tags with angle brackets"
+    })
+    
+    # Test case 14: Long single character repetition
+    test_cases.append({
+        "input": "x" * 500,
+        "output": calculate_hash_chain("x" * 500),
+        "description": "Long string - 500 repeated characters"
+    })
     
     return test_cases
 
@@ -138,6 +174,7 @@ benchmark_file = 'benchmarking.py'
 py_files = [f for f in os.listdir('.') if f.endswith('.py') and f != benchmark_file]
 
 results = {}
+detailed_results = {}
 
 # Generate test cases once to use for all solutions
 test_cases = generate_test_cases()
@@ -145,29 +182,77 @@ test_cases = generate_test_cases()
 for file in py_files:
     correct = 0
     total = len(test_cases)
+    failed_cases = []
     
-    for case in test_cases:
+    for i, case in enumerate(test_cases):
         try:
             # Run the script with input and capture output
             result = subprocess.run(
                 ['python', file],
-                input=case["input"].encode(),
+                input=case["input"].encode('utf-8'),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=2  # 2 second timeout per test case
             )
             output = result.stdout.decode().strip()
-            if output == case["output"]:
+            if verify_solution(case["input"], case["output"], output):
                 correct += 1
+            else:
+                failed_cases.append({
+                    'case_num': i + 1,
+                    'description': case.get('description', f'Test case {i + 1}'),
+                    'input': case["input"][:100] + "..." if len(case["input"]) > 100 else case["input"],
+                    'expected': case["output"],
+                    'actual': output,
+                    'stderr': result.stderr.decode().strip() if result.stderr else None
+                })
             
         except Exception as e:
-            pass  # Failed test case
+            failed_cases.append({
+                'case_num': i + 1,
+                'description': case.get('description', f'Test case {i + 1}'),
+                'input': case["input"][:100] + "..." if len(case["input"]) > 100 else case["input"],
+                'expected': case["output"],
+                'actual': 'ERROR',
+                'error': str(e)
+            })
     
     results[file] = f"{correct}/{total}"
+    detailed_results[file] = failed_cases
 
 # Print summary of results
 print("\nScript Evaluation Results:")
 print("-" * 30)
 for script, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
     print(f"{script}: {score}")
+
+# Only show detailed failure analysis if not called from parent script
+show_details = True
+if len(sys.argv) > 1 and sys.argv[1] == "--no-details":
+    show_details = False
+elif os.path.basename(os.getcwd()) != os.path.basename(os.path.dirname(__file__)):
+    # If current working directory is not the script's directory, likely called from parent
+    show_details = False
+
+if show_details:
+    # Print detailed failure information
+    print("\nDetailed Failure Analysis:")
+    print("=" * 50)
+    for script in sorted(py_files):
+        score = results[script]
+        if detailed_results[script]:
+            print(f"\n{script} - {score} - Failed Cases:")
+            print("-" * 30)
+            for failure in detailed_results[script]:
+                print(f"Test Case {failure['case_num']}: {failure['description']}")
+                print(f"Input: {failure['input']}")
+                print(f"Expected: {failure['expected']}")
+                print(f"Actual: {failure['actual']}")
+                if 'error' in failure:
+                    print(f"Error: {failure['error']}")
+                if failure.get('stderr'):
+                    print(f"Stderr: {failure['stderr']}")
+                print()
+        else:
+            print(f"\n{script}: {score}")
 
