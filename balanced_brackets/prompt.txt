@@ -45,5 +45,3 @@ Explanation:
 Note:
 - Empty sequence is considered balanced
 - A single bracket or unclosed bracket sequence is not balanced
-- Time limit: 1 second
-- Memory limit: 256 MB 

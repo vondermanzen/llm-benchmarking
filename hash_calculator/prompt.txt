@@ -51,5 +51,3 @@ Note:
   * For all other hashes, use the direct hashlib functions (e.g., hashlib.sha256())
 - All intermediate steps must be exactly as specified
 - The program should handle a single input string, not multiple test cases
-- Time limit: 1 second
-- Memory limit: 256 MB 

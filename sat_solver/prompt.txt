@@ -57,5 +57,3 @@ Note:
 - The formula is guaranteed to be in valid CNF format
 - Each clause will have at least one literal
 - Each variable number will be between 1 and N
-- Time limit: 2 seconds
-- Memory limit: 256 MB 
