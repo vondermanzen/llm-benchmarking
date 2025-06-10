@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import os
+import time
 from typing import List, Dict, Set, Optional, Tuple
 
 def evaluate_assignment(clauses: List[List[int]], assignment: List[int]) -> bool:
@@ -190,10 +191,12 @@ for file in py_files:
     correct = 0
     total = len(test_cases)
     failed_cases = []
+    total_time = 0
     
     for i, case in enumerate(test_cases):
         try:
             # Run the script with input and capture output
+            start_time = time.time()
             result = subprocess.run(
                 ['python', file],
                 input=case["input"].encode(),
@@ -201,6 +204,9 @@ for file in py_files:
                 stderr=subprocess.PIPE,
                 timeout=2  # 2 second timeout per test case
             )
+            end_time = time.time()
+            execution_time = (end_time - start_time) * 1000  # Convert to milliseconds
+            
             output = result.stdout.decode().strip()
             
             # Parse the single test case
@@ -262,6 +268,7 @@ for file in py_files:
             
             if test_passed:
                 correct += 1
+                total_time += execution_time
             else:
                 failed_cases.append({
                     'case_num': i + 1,
@@ -283,14 +290,21 @@ for file in py_files:
                 'error': str(e)
             })
     
-    results[file] = f"{correct}/{total}"
+    # Calculate average time for correct solutions
+    avg_time = total_time / correct if correct > 0 else float('inf')
+    results[file] = {
+        'score': f"{correct}/{total}",
+        'avg_time_ms': round(avg_time, 2)
+    }
     detailed_results[file] = failed_cases
 
 # Print summary of results
-print("\nScript Evaluation Results:")
-print("-" * 30)
-for script, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
-    print(f"{script}: {score}")
+print("Script Evaluation Results:")
+print("-" * 50)
+print(f"{'Script':<20} {'Score':<10} {'Avg Time (ms)':<15}")
+print("-" * 50)
+for script, result in sorted(results.items(), key=lambda x: (x[1]['score'], -x[1]['avg_time_ms']), reverse=True):
+    print(f"{script:<20} {result['score']:<10} {result['avg_time_ms']:<15.2f}")
 
 # Only show detailed failure analysis if not called from parent script
 show_details = True
@@ -305,7 +319,7 @@ if show_details:
     print("\nDetailed Failure Analysis:")
     print("=" * 50)
     for script in sorted(py_files):
-        score = results[script]
+        score = results[script]['score']
         if detailed_results[script]:
             print(f"\n{script} - {score} - Failed Cases:")
             print("-" * 30)
