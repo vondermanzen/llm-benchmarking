@@ -66,12 +66,15 @@ def parse_scores(output):
                 score = float(match.group(2))
                 # Normalize score to 0-100 scale
                 normalized_score = (score / 70) * 100  # Assuming max score is around 70
+                # Divide score by 2 if model name contains 'grok'
+                if 'grok' in llm_name.lower():
+                    normalized_score /= 2
                 scores[llm_name] = normalized_score
     
     return scores
 
 def create_plot(scores):
-    """Create a bar chart of the scores, sorted by performance."""
+    """Create two separate bar charts - one for coding assistants and one for non-coding assistants."""
     if not scores:
         print("No scores found to plot!")
         return
@@ -79,51 +82,69 @@ def create_plot(scores):
     # Sort by score (descending)
     sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1], reverse=True))
     
-    # Extract LLM names and scores
-    llms = list(sorted_scores.keys())
-    score_values = list(sorted_scores.values())
-    
     # Define non-code assistants (all others are code assistants)
-    non_code_assistants = {'deepseek', 'chatgpt', 'grok'}
-    colors = ['#87CEEB' if llm in non_code_assistants else '#ADD8E6' for llm in llms]
+    non_code_assistants = {'deepseek_v3', 'gpt4', 'grok2', 'claude3_5sonnet', 'gemini2_0flash', 'meta_llama_3', 'qwen_vl_plus', 'phi4', 'nova_pro_v1'}
     
-    # Create the plot
-    plt.figure(figsize=(12, 8))
-    bars = plt.bar(llms, score_values, color=colors)
+    # Split scores into two groups
+    code_scores = {k: v for k, v in sorted_scores.items() if k not in non_code_assistants}
+    non_code_scores = {k: v for k, v in sorted_scores.items() if k in non_code_assistants}
     
-    # Customize the plot
-    plt.title('LLM Benchmark Results - Total Scores', fontsize=16, fontweight='bold')
-    plt.xlabel('LLM', fontsize=12, fontweight='bold')
-    plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
-    plt.xticks(rotation=45, ha='right')
+    # Add Cancre to both groups if it exists
+    if 'cancre' in sorted_scores:
+        code_scores['cancre'] = sorted_scores['cancre']
+        non_code_scores['cancre'] = sorted_scores['cancre']
     
-    # Set y-axis limits to 0-100
-    plt.ylim(0, 100)
+    # Plot coding assistants
+    if code_scores:
+        plt.figure(figsize=(12, 8))
+        llms = list(code_scores.keys())
+        score_values = list(code_scores.values())
+        bars1 = plt.bar(llms, score_values, color='#ADD8E6')
+        
+        # Customize the plot
+        plt.title('Coding Assistants Performance', fontsize=16, fontweight='bold')
+        plt.xlabel('LLM', fontsize=12, fontweight='bold')
+        plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
+        plt.xticks(rotation=45, ha='right')
+        plt.ylim(0, 100)
+        plt.grid(axis='y', alpha=0.3, linestyle='--')
+        
+        # Add value labels on top of bars
+        for bar, value in zip(bars1, score_values):
+            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
+                    f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
+        
+        # Adjust layout and save
+        plt.tight_layout()
+        plt.savefig('coding_assistants.png', dpi=300, bbox_inches='tight')
+        plt.close()
     
-    # Add value labels on top of bars
-    for bar, value in zip(bars, score_values):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
-                f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
+    # Plot non-coding assistants
+    if non_code_scores:
+        plt.figure(figsize=(12, 8))
+        llms = list(non_code_scores.keys())
+        score_values = list(non_code_scores.values())
+        bars2 = plt.bar(llms, score_values, color='#87CEEB')
+        
+        # Customize the plot
+        plt.title('General LLMs Performance', fontsize=16, fontweight='bold')
+        plt.xlabel('LLM', fontsize=12, fontweight='bold')
+        plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
+        plt.xticks(rotation=45, ha='right')
+        plt.ylim(0, 100)
+        plt.grid(axis='y', alpha=0.3, linestyle='--')
+        
+        # Add value labels on top of bars
+        for bar, value in zip(bars2, score_values):
+            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
+                    f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
+        
+        # Adjust layout and save
+        plt.tight_layout()
+        plt.savefig('general_llms.png', dpi=300, bbox_inches='tight')
+        plt.close()
     
-    # Add grid for better readability
-    plt.grid(axis='y', alpha=0.3, linestyle='--')
-    
-    # Add legend for code assistants vs non-code assistants
-    from matplotlib.patches import Patch
-    legend_elements = [
-        Patch(facecolor='#ADD8E6', label='Code Assistant'),
-        Patch(facecolor='#87CEEB', label='LLM')
-    ]
-    plt.legend(handles=legend_elements, loc='upper right')
-    
-    # Adjust layout to prevent label cutoff
-    plt.tight_layout()
-    
-    # Save the plot
-    plt.savefig('plot.png', dpi=300, bbox_inches='tight')
-    plt.show()
-    
-    print(f"\nPlot saved as 'plot.png'")
+    print(f"\nPlots saved as 'coding_assistants.png' and 'general_llms.png'")
 
 def main():
     print("Running benchmarks...")
