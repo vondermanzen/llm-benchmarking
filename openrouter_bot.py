@@ -9,7 +9,6 @@ def get_available_models():
     """Get list of available models from OpenRouter."""
     headers = {
         "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-        "HTTP-Referer": "https://github.com/pauld/llm-benchmarking",
         "X-Title": "LLM Benchmarking"
     }
     
