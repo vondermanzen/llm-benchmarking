@@ -55,11 +55,9 @@ Conduct the generation in an isolated environment to prevent LLMs from accessing
 
 ## Usage
 
-Run run_all_tests.py
+run generate_plot.py
 
-![Usage](usage.png)
+![Plot](general_llms.png)
 
-or run generate_plot.py
-
-![Plot](plot.png)
+![Plot](coding_assistants.png)
 
