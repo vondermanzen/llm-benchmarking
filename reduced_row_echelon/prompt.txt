@@ -44,5 +44,3 @@ Note:
 - The rank is the number of non-zero rows in the reduced row echelon form
 - A system may be inconsistent (no solution) or have multiple solutions
 - The program should handle a single test case (not multiple test cases)
-- Time limit: 2 seconds
-- Memory limit: 256 MB 

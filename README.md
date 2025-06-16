@@ -44,58 +44,6 @@ Each problem includes a `cancre.py` (French for "dunce") that provides a minimal
    - Test cases cover various edge cases and performance requirements
    - Results are automatically scored and documented
 
-### Key Principles
-
-1. **Consistency with Adaptability**
-   - Base problems and evaluation criteria remain constant across all LLMs
-   - Prompt engineering may be necessary for different LLMs:
-     * Some LLMs may attempt to create full applications instead of focused solutions
-     * Others may require specific guidance to produce extractable code
-     * Contributors should document any prompt modifications needed
-   - Testing infrastructure and scoring remain standardized regardless of prompt adaptations
-
-2. **Non-Intervention**
-   - Contributors must not modify or optimize the LLM's code
-   - The goal is to assess raw LLM output, not human-assisted solutions
-   - Any necessary clarifications should be made through prompt refinement only
-
-3. **Transparency**
-   - All prompts, test cases, and evaluation criteria are publicly available
-   - The testing process is documented and reproducible
-   - Results can be independently verified
-   - All prompt modifications must be documented and justified
-
-4. **Fairness**
-   - Problems are designed to be solvable within LLM context windows
-   - Time and memory constraints are reasonable for the given tasks
-   - Edge cases are documented in the prompts
-   - Prompt refinements must not simplify the core challenge
-
-## Repository Structure
-
-```
-.
-├── README.md
-├── strongly_connected_components/
-│   ├── prompt.txt
-│   └── benchmarking.py
-├── reduced_row_echelon/
-│   ├── prompt.txt
-│   └── benchmarking.py
-├── sat_solver/
-│   ├── prompt.txt
-│   └── benchmarking.py
-├── balanced_brackets/
-│   ├── prompt.txt
-│   └── benchmarking.py
-├── hash_calculator/
-│   ├── prompt.txt
-│   └── benchmarking.py
-└── primality/
-    ├── prompt.txt
-    └── benchmarking.py
-```
-
 ## Usage for Contributors
 
 1. Clone this repository
@@ -105,22 +53,11 @@ Each problem includes a `cancre.py` (French for "dunce") that provides a minimal
 
 Conduct the generation in an isolated environment to prevent LLMs from accessing each other's solutions
 
-## Contributing
+## Usage
 
-This framework is designed for research purposes. When contributing:
-- Maintain the existing problem structure
-- Do not modify existing test cases or evaluation criteria
-- Document any prompt refinements needed for different LLMs
-- Share insights about prompt engineering that led to extractable solutions
+run generate_plot.py
 
-## Research Integrity
+![Plot](general_llms.png)
 
-The goal of this framework is to provide objective, reproducible assessments of LLM coding capabilities. Contributors should:
-- Report all prompt refinements used to obtain solutions
-- Document any limitations or failures encountered
-- Maintain the integrity of the LLM's original output
-- Share both successful and unsuccessful evaluation attempts
+![Plot](coding_assistants.png)
 
-## License
-
-This framework is provided for research purposes. Please check individual licenses for any LLMs used in testing. 

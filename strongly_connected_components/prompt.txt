@@ -31,5 +31,3 @@ In this example:
 Note:
 - Your solution should handle empty graphs (M = 0) and disconnected graphs
 - The input graph may contain self-loops and multiple edges between the same pair of vertices
-- Time limit: 2 seconds
-- Memory limit: 256 MB 

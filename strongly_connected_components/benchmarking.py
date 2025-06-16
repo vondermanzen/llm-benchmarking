@@ -1,52 +1,9 @@
 import sys
-import random
 from collections import defaultdict
 from typing import List, Set, Dict, Tuple
 import subprocess
 import os
-
-def generate_test_case(case_type: str = "random") -> Tuple[str, str]:
-    """Generate a test case based on the type."""
-    if case_type == "single_scc":
-        # Generate a cycle
-        n = random.randint(3, 10)
-        edges = [(i + 1, (i + 1) % n + 1) for i in range(n)]  # 1-based indexing
-        return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), "1"
-        
-    elif case_type == "no_edges":
-        # Each node is its own SCC
-        n = random.randint(5, 10)
-        return f"{n} 0\n", str(n)
-        
-    elif case_type == "chain":
-        # Chain of nodes, each node is its own SCC
-        n = random.randint(5, 10)
-        edges = [(i, i + 1) for i in range(1, n)]  # 1-based indexing
-        return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), str(n)
-        
-    elif case_type == "two_scc":
-        # Two strongly connected components
-        n = random.randint(6, 10)
-        half = n // 2
-        # First SCC (1-based indexing)
-        edges = [(i, (i % half) + 1) for i in range(1, half + 1)]
-        # Second SCC (1-based indexing)
-        edges += [(i + half, ((i % half) + half + 1)) for i in range(1, half + 1)]
-        edges.append((1, half + 1))  # Connect them
-        return f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges), "2"
-        
-    else:  # random
-        n = random.randint(5, 15)
-        edge_count = random.randint(n, n * 2)
-        edges = []
-        for _ in range(edge_count):
-            u = random.randint(1, n)  # 1-based indexing
-            v = random.randint(1, n)  # 1-based indexing
-            edges.append((u, v))
-        return (
-            f"{n} {len(edges)}\n" + "\n".join(f"{u} {v}" for u, v in edges),
-            str(kosaraju_scc(n, edges))
-        )
+import time
 
 def kosaraju_scc(n: int, edges: List[Tuple[int, int]]) -> int:
     """Reference implementation of Kosaraju's algorithm."""
@@ -104,30 +61,78 @@ def verify_solution(test_input: str, expected_output: str, received_output: str)
         return False
 
 def generate_test_cases() -> List[Dict]:
-    """Generate various test cases with their expected outputs."""
+    """Generate hardcoded test cases with their expected outputs."""
     test_cases = []
     
     # Test case 1: Example from prompt
     test_cases.append({
         "input": "4 4\n1 2\n2 3\n3 1\n4 1",
-        "output": "2"
+        "output": "2",
+        "description": "Example from prompt - 4 nodes with cycle 1→2→3→1 and isolated node 4"
     })
     
-    # Test case 2: Different types of test cases
-    cases = [
-        generate_test_case("single_scc"),
-        generate_test_case("no_edges"),
-        generate_test_case("chain"),
-        generate_test_case("two_scc"),
-        generate_test_case("random")
-    ]
+    # Test case 2: Single SCC (simple cycle)
+    test_cases.append({
+        "input": "3 3\n1 2\n2 3\n3 1",
+        "output": "1",
+        "description": "Single SCC - simple 3-node cycle"
+    })
     
-    # Add each case individually
-    for input_str, output in cases:
-        test_cases.append({
-            "input": input_str,
-            "output": output
-        })
+    # Test case 3: No edges (each node is its own SCC)
+    test_cases.append({
+        "input": "5 0\n",
+        "output": "5",
+        "description": "No edges - each of 5 nodes is its own SCC"
+    })
+    
+    # Test case 4: Chain (linear graph)
+    test_cases.append({
+        "input": "4 3\n1 2\n2 3\n3 4",
+        "output": "4",
+        "description": "Linear chain - each node is its own SCC"
+    })
+    
+    # Test case 5: Two SCCs
+    test_cases.append({
+        "input": "6 7\n1 2\n2 3\n3 1\n4 5\n5 6\n6 4\n1 4",
+        "output": "2",
+        "description": "Two SCCs - cycle {1,2,3} and cycle {4,5,6} connected by edge 1→4"
+    })
+    
+    # Test case 6: Complex case with multiple SCCs
+    test_cases.append({
+        "input": "8 10\n1 2\n2 1\n3 4\n4 5\n5 3\n6 7\n7 8\n8 6\n2 3\n5 6",
+        "output": "3",
+        "description": "Three SCCs - {1,2}, {3,4,5}, {6,7,8} with connecting edges"
+    })
+    
+    # Test case 7: Single node
+    test_cases.append({
+        "input": "1 0\n",
+        "output": "1",
+        "description": "Single node - trivial SCC"
+    })
+    
+    # Test case 8: Self loops
+    test_cases.append({
+        "input": "3 3\n1 1\n2 2\n3 3",
+        "output": "3",
+        "description": "Self loops - each node with self-loop is its own SCC"
+    })
+    
+    # Test case 9: Larger single SCC
+    test_cases.append({
+        "input": "5 5\n1 2\n2 3\n3 4\n4 5\n5 1",
+        "output": "1",
+        "description": "Large single SCC - 5-node cycle"
+    })
+    
+    # Test case 10: Mixed case
+    test_cases.append({
+        "input": "7 8\n1 2\n2 1\n3 4\n4 3\n5 6\n6 7\n7 5\n2 3",
+        "output": "3",
+        "description": "Mixed case - three SCCs {1,2}, {3,4}, and {5,6,7} with one-way edge 2→3"
+    })
     
     return test_cases
 
@@ -138,6 +143,7 @@ benchmark_file = 'benchmarking.py'
 py_files = [f for f in os.listdir('.') if f.endswith('.py') and f != benchmark_file]
 
 results = {}
+detailed_results = {}
 
 # Generate test cases once to use for all solutions
 test_cases = generate_test_cases()
@@ -145,10 +151,13 @@ test_cases = generate_test_cases()
 for file in py_files:
     correct = 0
     total = len(test_cases)
+    failed_cases = []
+    total_time = 0
     
-    for case in test_cases:
+    for i, case in enumerate(test_cases):
         try:
             # Run the script with input and capture output
+            start_time = time.time()
             result = subprocess.run(
                 ['python', file],
                 input=case["input"].encode(),
@@ -156,17 +165,75 @@ for file in py_files:
                 stderr=subprocess.PIPE,
                 timeout=2  # 2 second timeout per test case
             )
+            end_time = time.time()
+            execution_time = (end_time - start_time) * 1000  # Convert to milliseconds
+            
             output = result.stdout.decode().strip()
             if output == case["output"]:
                 correct += 1
+                total_time += execution_time
+            else:
+                failed_cases.append({
+                    'case_num': i + 1,
+                    'description': case.get('description', f'Test case {i + 1}'),
+                    'input': case["input"],
+                    'expected': case["output"],
+                    'actual': output,
+                    'stderr': result.stderr.decode().strip() if result.stderr else None
+                })
             
         except Exception as e:
-            pass  # Failed test case
+            failed_cases.append({
+                'case_num': i + 1,
+                'description': case.get('description', f'Test case {i + 1}'),
+                'input': case["input"],
+                'expected': case["output"],
+                'actual': 'ERROR',
+                'error': str(e)
+            })
     
-    results[file] = f"{correct}/{total}"
+    # Calculate average time for correct solutions
+    avg_time = total_time / correct if correct > 0 else float('inf')
+    results[file] = {
+        'score': f"{correct}/{total}",
+        'avg_time_ms': round(avg_time, 2)
+    }
+    detailed_results[file] = failed_cases
 
 # Print summary of results
-print("\nScript Evaluation Results:")
-print("-" * 30)
-for script, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
-    print(f"{script}: {score}") 
+print("Script Evaluation Results:")
+print("-" * 50)
+print(f"{'Script':<20} {'Score':<10} {'Avg Time (ms)':<15}")
+print("-" * 50)
+for script, result in sorted(results.items(), key=lambda x: (x[1]['score'], -x[1]['avg_time_ms']), reverse=True):
+    print(f"{script:<20} {result['score']:<10} {result['avg_time_ms']:<15.2f}")
+
+# Only show detailed failure analysis if not called from parent script
+show_details = True
+if len(sys.argv) > 1 and sys.argv[1] == "--no-details":
+    show_details = False
+elif os.path.basename(os.getcwd()) != os.path.basename(os.path.dirname(__file__)):
+    # If current working directory is not the script's directory, likely called from parent
+    show_details = False
+
+if show_details:
+    # Print detailed failure information
+    print("\nDetailed Failure Analysis:")
+    print("=" * 50)
+    for script in sorted(py_files):
+        score = results[script]['score']
+        if detailed_results[script]:
+            print(f"\n{script} - {score} - Failed Cases:")
+            print("-" * 30)
+            for failure in detailed_results[script]:
+                print(f"Test Case {failure['case_num']}: {failure['description']}")
+                print(f"Input:\n{failure['input']}")
+                print(f"Expected: {failure['expected']}")
+                print(f"Actual: {failure['actual']}")
+                if 'error' in failure:
+                    print(f"Error: {failure['error']}")
+                if failure.get('stderr'):
+                    print(f"Stderr: {failure['stderr']}")
+                print()
+        else:
+            print(f"\n{script}: {score}") 

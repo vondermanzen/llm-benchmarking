@@ -2,6 +2,7 @@ import sys
 import random
 import subprocess
 import os
+import time
 from typing import List, Dict, Tuple
 
 def miller_rabin_base(n: int, a: int) -> bool:
@@ -197,10 +198,12 @@ test_cases = generate_test_cases()
 for file in py_files:
     correct = 0
     total = len(test_cases)
+    total_time = 0
     
     for case in test_cases:
         try:
             # Run the script with input and capture output
+            start_time = time.time()
             result = subprocess.run(
                 ['python', file],
                 input=case["input"].encode(),
@@ -208,19 +211,30 @@ for file in py_files:
                 stderr=subprocess.PIPE,
                 timeout=2  # 2 second timeout per test case
             )
+            end_time = time.time()
+            execution_time = (end_time - start_time) * 1000  # Convert to milliseconds
+            
             # Normalize line endings by splitting and joining
             output = "\n".join(result.stdout.decode().strip().splitlines())
             expected = "\n".join(case["output"].splitlines())
             if output == expected:
                 correct += 1
+                total_time += execution_time
             
         except Exception as e:
             pass  # Failed test case
     
-    results[file] = f"{correct}/{total}"
+    # Calculate average time for correct solutions
+    avg_time = total_time / correct if correct > 0 else float('inf')
+    results[file] = {
+        'score': f"{correct}/{total}",
+        'avg_time_ms': round(avg_time, 2)
+    }
 
 # Print summary of results
-print("\nScript Evaluation Results:")
-print("-" * 30)
-for script, score in sorted(results.items(), key=lambda x: x[1], reverse=True):
-    print(f"{script}: {score}") 
+print("Script Evaluation Results:")
+print("-" * 50)
+print(f"{'Script':<20} {'Score':<10} {'Avg Time (ms)':<15}")
+print("-" * 50)
+for script, result in sorted(results.items(), key=lambda x: (x[1]['score'], -x[1]['avg_time_ms']), reverse=True):
+    print(f"{script:<20} {result['score']:<10} {result['avg_time_ms']:<15.2f}") 
