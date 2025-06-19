@@ -124,6 +124,7 @@ for file in py_files:
     total = len(test_cases)
     failed_cases = []
     total_time = 0
+    any_failed = False
     
     for i, case in enumerate(test_cases):
         try:
@@ -142,8 +143,9 @@ for file in py_files:
             output = result.stdout.decode().strip()
             if output == case["output"]:
                 correct += 1
-                total_time += execution_time
-            else:
+            # Add time for all test cases, not just correct ones
+            total_time += execution_time
+            if output != case["output"]:
                 failed_cases.append({
                     'case_num': i + 1,
                     'description': case.get('description', f'Test case {i + 1}'),
@@ -154,6 +156,7 @@ for file in py_files:
                 })
             
         except Exception as e:
+            any_failed = True
             failed_cases.append({
                 'case_num': i + 1,
                 'description': case.get('description', f'Test case {i + 1}'),
@@ -163,21 +166,24 @@ for file in py_files:
                 'error': str(e)
             })
     
-    # Calculate average time for correct solutions
-    avg_time = total_time / correct if correct > 0 else float('inf')
+    # If any test case failed to execute, set total time to infinity
+    if any_failed:
+        total_time = float('inf')
+    
+    # Use total time for all test cases
     results[file] = {
         'score': f"{correct}/{total}",
-        'avg_time_ms': round(avg_time, 2)
+        'total_time_ms': round(total_time, 2) if total_time != float('inf') else float('inf')
     }
     detailed_results[file] = failed_cases
 
 # Print summary of results
 print("Script Evaluation Results:")
 print("-" * 50)
-print(f"{'Script':<20} {'Score':<10} {'Avg Time (ms)':<15}")
+print(f"{'Script':<20} {'Score':<10} {'Total Time (ms)':<15}")
 print("-" * 50)
-for script, result in sorted(results.items(), key=lambda x: (x[1]['score'], -x[1]['avg_time_ms']), reverse=True):
-    print(f"{script:<20} {result['score']:<10} {result['avg_time_ms']:<15.2f}")
+for script, result in sorted(results.items(), key=lambda x: (x[1]['score'], -x[1]['total_time_ms']), reverse=True):
+    print(f"{script:<20} {result['score']:<10} {result['total_time_ms']:<15.2f}")
 
 # Only show detailed failure analysis if not called from parent script
 show_details = True

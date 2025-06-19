@@ -26,12 +26,12 @@ def parse_benchmark_output(output):
             script_name = match.group(1)
             correct = int(match.group(2))
             total = int(match.group(3))
-            avg_time = float(match.group(4))
+            total_time = float(match.group(4))
             
             results[script_name] = {
                 'correct': correct,
                 'total': total,
-                'avg_time': avg_time
+                'total_time': total_time
             }
     
     return results
@@ -43,8 +43,8 @@ def calculate_adjusted_score(results):
     # Find the fastest time to use as baseline
     fastest_time = float('inf')
     for result in results.values():
-        if result['avg_time'] < fastest_time:
-            fastest_time = result['avg_time']
+        if result['total_time'] < fastest_time:
+            fastest_time = result['total_time']
     
     # If no valid times found, use a default baseline
     if fastest_time == float('inf'):
@@ -56,8 +56,8 @@ def calculate_adjusted_score(results):
         
         # Linear time penalty: score is inversely proportional to execution time
         # Fastest solution gets full points, others get proportionally less
-        if result['avg_time'] < float('inf'):
-            time_penalty = fastest_time / result['avg_time']
+        if result['total_time'] < float('inf'):
+            time_penalty = fastest_time / result['total_time']
         else:
             time_penalty = 0.5  # Maximum penalty for failed solutions
         

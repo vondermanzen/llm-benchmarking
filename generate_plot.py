@@ -83,7 +83,7 @@ def create_plot(scores):
     sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1], reverse=True))
     
     # Define non-code assistants (all others are code assistants)
-    non_code_assistants = {'deepseek_v3', 'gpt4', 'grok2', 'claude3_5sonnet', 'gemini2_0flash', 'meta_llama_3', 'qwen_vl_plus', 'phi4', 'nova_pro_v1', 'nous_hermes3'}
+    non_code_assistants = {'deepseek_v3', 'gpt4', 'grok2', 'claude3_5sonnet', 'gemini1_5', 'meta_llama_3', 'qwen_vl_plus', 'phi4', 'nova_pro_v1', 'nous_hermes3'}
     
     # Split scores into two groups
     code_scores = {k: v for k, v in sorted_scores.items() if k not in non_code_assistants}
