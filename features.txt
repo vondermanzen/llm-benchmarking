@@ -1,0 +1,20 @@
+Evaluator	Category	Tool	Open Source	Self-hostable	Domain-Specific	Backend/SDK	LLM Agnostic	Tab Completion	Chat	Modify Files	Run Commands	Select Context	IP Checks	Multi-IDE	Data Retained	Data Re-used
+Ayan	Full-featured	Cursor	No	No	No	No	No	Yes	Yes	Yes	Yes	No	No	No	No	No
+Maria	Full-featured	GitHub Copilot	No	No	No	No	No	Yes	Yes	No	No	Yes	Yes	Yes	No	No
+Ansar	Full-featured	Amazon Q	No	No	No	No	No	Yes	Yes	Yes	Yes	No	Yes	Yes	No	No
+Maria	Lightweight	Replit	No	No	No	No	No	Yes	Yes	Yes	Yes	No	No	No	No	Yes
+Ayan	Full-featured	Mutable AI	No	No	No	No	No	Yes	No	Yes	No	No	No	Yes	Yes	No
+Ansar	Lightweight	TabbyML	Yes	Yes	No	Yes	No	Yes	Yes	Yes	No	No	No	Yes	No	No
+Sid	Lightweight	OpenAI Codex	No	No	No	Yes	No	Yes	No	No	No	No	No	Yes	No	No
+Paul	Full-featured	Sourcegraph	No	Yes	No	No	Yes	Yes	Yes	Yes	No	No	No	Yes	Yes	No
+Maria	Lightweight	Tabnine	No	Yes	No	No	Yes	Yes	Yes	No	No	Yes	No	Yes	No	No
+Sid	Lightweight	AskCodi	No	No	No	No	No	Yes	Yes	No	No	No	No	Yes	No	No
+Sid	Lightweight	DeepCode	No	Yes	Yes	Yes	No	No	No	Yes	No	No	No	Yes	No	No
+Ansar	Full-featured	Cline	Yes	Yes	No	No	Yes	No	Yes	Yes	Yes	No	No	No	No	No
+Ayan	Lightweight	Trae	Yes	Yes	No	No	Yes	Yes	Yes	Yes	Yes	No	No	No	No	No
+Maria	Lightweight	Qodo	No	No	Yes	Yes	No	Yes	Yes	Yes	No	No	No	Yes	Yes	No
+Ayan	Lightweight	Zed Editor	No	Yes	No	No	Yes	Yes	Yes	Yes	Yes	Yes	No	No	No	No
+Ansar	Full-featured	Windsurf Editor	No	Yes	No	Yes	No	Yes	Yes	Yes	No	No	No	Yes	No	No
+Sid	Lightweight	Firebase Studio	No	No	Yes	No	No	Yes	Yes	Yes	Yes	No	Yes	No	Yes	No
+Ansar	Full-featured	aider	Yes	Yes	No	No	Yes	No	Yes	Yes	Yes	Yes	No	Yes	No	No
+Paul	Full-featured	pycharm	No	No	Yes	No	No	Yes	Yes	Yes	Yes	Yes	No	Yes	Yes	Yes

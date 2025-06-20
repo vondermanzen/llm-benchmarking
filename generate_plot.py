@@ -4,6 +4,7 @@ import sys
 import re
 import matplotlib.pyplot as plt
 from collections import defaultdict
+import pandas as pd
 
 def run_benchmarks():
     """Run the benchmark script and capture output with real-time display."""
@@ -146,6 +147,91 @@ def create_plot(scores):
     
     print(f"\nPlots saved as 'coding_assistants.png' and 'general_llms.png'")
 
+def create_feature_plot():
+    """Create a plot based on feature scores from features.txt."""
+    try:
+        # Read the features.txt file
+        df = pd.read_csv('features.txt', sep='\t')
+        
+        # Define feature weights (positive = good, negative = bad)
+        feature_weights = {
+            'Open Source': 8,
+            'Self-hostable': 7,
+            'LLM Agnostic': 6,
+            'Tab Completion': 5,
+            'Chat': 4,
+            'Modify Files': 4,
+            'Run Commands': 3,
+            'Select Context': 3,
+            'Multi-IDE': 2,
+            'Data Retained': -5,
+            'Data Re-used': -8
+        }
+        
+        # Calculate scores for each tool
+        tool_scores = {}
+        
+        for _, row in df.iterrows():
+            tool_name = row['Tool']
+            score = 0
+            
+            for feature, weight in feature_weights.items():
+                if feature in row and row[feature] == 'Yes':
+                    score += weight
+            
+            tool_scores[tool_name] = score
+        
+        # Sort by score (descending)
+        sorted_scores = dict(sorted(tool_scores.items(), key=lambda x: x[1], reverse=True))
+        
+        # Create the plot
+        plt.figure(figsize=(14, 10))
+        tools = list(sorted_scores.keys())
+        scores = list(sorted_scores.values())
+        
+        # Color bars based on score (green for positive, red for negative)
+        colors = ['#2E8B57' if score >= 0 else '#DC143C' for score in scores]
+        bars = plt.bar(tools, scores, color=colors, alpha=0.8)
+        
+        # Customize the plot
+        plt.title('Coding Assistants Feature-Based Scoring', fontsize=16, fontweight='bold')
+        plt.xlabel('Coding Assistant', fontsize=12, fontweight='bold')
+        plt.ylabel('Feature Score', fontsize=12, fontweight='bold')
+        plt.xticks(rotation=45, ha='right')
+        plt.grid(axis='y', alpha=0.3, linestyle='--')
+        
+        # Add a horizontal line at y=0
+        plt.axhline(y=0, color='black', linestyle='-', alpha=0.5)
+        
+        # Add value labels on top of bars
+        for bar, score in zip(bars, scores):
+            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + (0.5 if score >= 0 else -0.5), 
+                    f"{score}", ha='center', va='bottom' if score >= 0 else 'top', 
+                    fontweight='bold', fontsize=10)
+        
+        # Add legend
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor='#2E8B57', alpha=0.8, label='Positive Score'),
+            Patch(facecolor='#DC143C', alpha=0.8, label='Negative Score')
+        ]
+        plt.legend(handles=legend_elements, loc='upper right')
+        
+        # Adjust layout and save
+        plt.tight_layout()
+        plt.savefig('feature_scores.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        print(f"\nFeature-based plot saved as 'feature_scores.png'")
+        
+        # Print the scores
+        print("\nFeature-based scores:")
+        for tool, score in sorted_scores.items():
+            print(f"{tool}: {score}")
+            
+    except Exception as e:
+        print(f"Error creating feature plot: {e}")
+
 def main():
     print("Running benchmarks...")
     print("(This may take a while...)\n")
@@ -176,6 +262,11 @@ def main():
             print("Found 'FINAL SCORES' in output")
         else:
             print("Did not find 'FINAL SCORES' in output")
+    
+    print("\n" + "="*60)
+    print("GENERATING FEATURE-BASED PLOT")
+    print("="*60)
+    create_feature_plot()
 
 if __name__ == "__main__":
     main() 
