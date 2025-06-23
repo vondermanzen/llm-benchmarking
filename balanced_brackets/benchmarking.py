@@ -94,7 +94,7 @@ def generate_test_cases() -> List[Dict]:
     
     # Test case 11: Wrong closing bracket type
     test_cases.append({
-        "input": "4\n(]",
+        "input": "2\n(]",
         "output": "NO",
         "description": "Wrong closing bracket type - parenthesis opened, bracket closed"
     })
@@ -108,21 +108,21 @@ def generate_test_cases() -> List[Dict]:
     
     # Test case 13: Missing closing bracket
     test_cases.append({
-        "input": "5\n((()",
+        "input": "4\n((()",
         "output": "NO",
         "description": "Missing closing bracket - not enough closing"
     })
     
     # Test case 14: Interleaved brackets (valid)
     test_cases.append({
-        "input": "8\n([{}])",
+        "input": "6\n([{}])",
         "output": "YES",
         "description": "Properly interleaved different bracket types"
     })
     
     # Test case 15: Interleaved brackets (invalid)
     test_cases.append({
-        "input": "6\n([)]",
+        "input": "4\n([)]",
         "output": "NO",
         "description": "Improperly interleaved brackets - crossing structure"
     })

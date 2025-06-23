@@ -106,8 +106,8 @@ def generate_test_cases() -> List[Dict]:
     # Test case 1: Simple satisfiable case
     test_cases.append({
         "input": "2 2\n1 2 0\n-1 -2 0",
-        "output": "SAT\n0 0",
-        "description": "Simple SAT - (x1∨x2)∧(¬x1∨¬x2) accepts any valid assignment"
+        "output": "SAT\n1 0",
+        "description": "Simple SAT - (x1∨x2)∧(¬x1∨¬x2)"
     })
     
     # Test case 2: Simple unsatisfiable case
@@ -148,14 +148,14 @@ def generate_test_cases() -> List[Dict]:
     # Test case 7: Example from prompt
     test_cases.append({
         "input": "3 2\n1 2 0\n-1 -2 3 0",
-        "output": "SAT\n0 0 1",
+        "output": "SAT\n1 0 0",
         "description": "Example from prompt - (x1∨x2)∧(¬x1∨¬x2∨x3) has multiple valid assignments"
     })
     
     # Test case 8: Larger satisfiable case
     test_cases.append({
         "input": "4 5\n1 2 0\n-1 3 0\n-2 4 0\n-3 -4 0\n1 4 0",
-        "output": "SAT\n1 1 1 0",
+        "output": "SAT\n1 0 1 0",
         "description": "4-variable SAT with implication chain - multiple valid assignments"
     })
     

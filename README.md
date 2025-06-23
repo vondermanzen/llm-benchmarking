@@ -50,3 +50,6 @@ run generate_plot.py
 
 ![Plot](coding_assistants.png)
 
+run generate_feature_plot.py
+
+![Plot](feature_scores.png)

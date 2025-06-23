@@ -31,7 +31,7 @@ Example Input 1:
 
 Example Output 1:
 SAT
-0 0 1
+1 0 1
 
 Explanation 1:
 The formula is: (x₁ ∨ x₂) ∧ (¬x₁ ∨ ¬x₂ ∨ x₃)
