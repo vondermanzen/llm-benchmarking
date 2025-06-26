@@ -103,8 +103,8 @@ def create_plot(scores):
         bars1 = plt.bar(llms, score_values, color='#ADD8E6')
         
         # Customize the plot
-        plt.title('Coding Assistants Performance', fontsize=16, fontweight='bold')
-        plt.xlabel('LLM', fontsize=12, fontweight='bold')
+        plt.title('Code Evaluation', fontsize=16, fontweight='bold')
+        plt.xlabel('Code Assistant', fontsize=12, fontweight='bold')
         plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
         plt.xticks(rotation=45, ha='right')
         plt.ylim(0, 100)
@@ -128,8 +128,8 @@ def create_plot(scores):
         bars2 = plt.bar(llms, score_values, color='#87CEEB')
         
         # Customize the plot
-        plt.title('General LLMs Performance', fontsize=16, fontweight='bold')
-        plt.xlabel('LLM', fontsize=12, fontweight='bold')
+        plt.title('Code Evaluation Reference', fontsize=16, fontweight='bold')
+        plt.xlabel('Model', fontsize=12, fontweight='bold')
         plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
         plt.xticks(rotation=45, ha='right')
         plt.ylim(0, 100)

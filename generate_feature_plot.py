@@ -51,7 +51,7 @@ def create_feature_plot():
         bars = plt.bar(tools, scores, color=color, alpha=0.8)
         
         # Customize the plot
-        plt.title('Coding Assistants Feature-Based Scoring', fontsize=16, fontweight='bold')
+        plt.title('Comparative analysis', fontsize=16, fontweight='bold')
         plt.xlabel('Coding Assistant', fontsize=12, fontweight='bold')
         plt.ylabel('Feature Score', fontsize=12, fontweight='bold')
         plt.xticks(rotation=45, ha='right')
