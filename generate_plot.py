@@ -129,7 +129,7 @@ def create_plot(scores):
             legend_handles.append(
                 plt.Rectangle((0,0), 2, 1.2, facecolor='white', edgecolor='black', hatch=patterns[i % len(patterns)])
             )
-        plt.title('General LLMs Code Evaluation (OpenRouter)', fontsize=16, fontweight='bold')
+        plt.title('Code Evaluation Reference (OpenRouter)', fontsize=16, fontweight='bold')
         plt.xlabel('')
         plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
         plt.xticks([])
@@ -140,7 +140,7 @@ def create_plot(scores):
             plt.text(rect.get_x() + rect.get_width()/2, rect.get_height() + 0.5, 
                      f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
         plt.legend(
-            legend_handles, names, title="General LLM",
+            legend_handles, names, title="Model",
             bbox_to_anchor=(1.05, 1), loc='upper left',
             handleheight=2.5, handlelength=3, borderaxespad=0.
         )

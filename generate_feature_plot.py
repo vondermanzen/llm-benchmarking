@@ -10,19 +10,20 @@ def create_feature_plot():
         # Read the features.txt file
         df = pd.read_csv('features.txt', sep='\t')
         
-        # Define feature weights (positive = good, negative = bad)
+        # Define feature weights (positive = good, negative features award points when absent)
+        # Total: 100 points
         feature_weights = {
-            'Open Source': 8,
-            'Self-hostable': 7,
-            'LLM Agnostic': 6,
-            'Tab Completion': 5,
-            'Chat': 4,
-            'Modify Files': 4,
-            'Run Commands': 3,
-            'Select Context': 3,
-            'Multi-IDE': 2,
-            'Data Retained': -5,
-            'Data Re-used': -8
+            'Open Source': 15,      # 8 * 1.82 ≈ 15
+            'Self-hostable': 13,    # 7 * 1.82 ≈ 13
+            'LLM Agnostic': 11,     # 6 * 1.82 ≈ 11
+            'Tab Completion': 9,    # 5 * 1.82 ≈ 9
+            'Chat': 7,              # 4 * 1.82 ≈ 7
+            'Modify Files': 7,      # 4 * 1.82 ≈ 7
+            'Run Commands': 5,      # 3 * 1.82 ≈ 5
+            'Select Context': 5,    # 3 * 1.82 ≈ 5
+            'Multi-IDE': 4,         # 2 * 1.82 ≈ 4
+            'Data Retained': 9,     # 5 * 1.82 ≈ 9 (awarded when "No")
+            'Data Re-used': 15      # 8 * 1.82 ≈ 15 (awarded when "No")
         }
         
         # Calculate scores for each tool
@@ -34,8 +35,15 @@ def create_feature_plot():
                 continue
             score = 0
             for feature, weight in feature_weights.items():
-                if feature in row and row[feature] == 'Yes':
-                    score += weight
+                if feature in row:
+                    if feature in ['Data Retained', 'Data Re-used']:
+                        # Award points when negative features are absent
+                        if row[feature] == 'No':
+                            score += weight
+                    else:
+                        # Award points when positive features are present
+                        if row[feature] == 'Yes':
+                            score += weight
             # Minimum score is zero
             score = max(score, 0)
             tool_scores[TECHNICAL_TO_DISPLAY[tool_name]] = score
@@ -53,7 +61,7 @@ def create_feature_plot():
         bars = plt.bar(tools, scores, color=colors, alpha=0.8)
         
         # Customize the plot
-        plt.title('Comparative analysis', fontsize=16, fontweight='bold')
+        plt.title('Comparative Analysis', fontsize=16, fontweight='bold')
         plt.xlabel('')
         plt.ylabel('Feature Score', fontsize=12, fontweight='bold')
         plt.xticks([])  # Remove names from below the plot
