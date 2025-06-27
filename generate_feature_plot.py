@@ -47,7 +47,7 @@ def create_feature_plot():
         colors = [DISPLAY_TO_COLOR[name] for name in sorted_scores.keys()]
         
         # Create the plot
-        plt.figure(figsize=(14, 10))
+        plt.figure(figsize=(14, 8))
         tools = list(sorted_scores.keys())
         scores = list(sorted_scores.values())
         bars = plt.bar(tools, scores, color=colors, alpha=0.8)
@@ -67,7 +67,8 @@ def create_feature_plot():
         
         # Add legend
         legend_handles = [plt.Rectangle((0,0),1,1, color=DISPLAY_TO_COLOR[name]) for name in tools]
-        plt.legend(legend_handles, tools, title="Assistant", bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.legend(legend_handles, tools, title="Assistant", bbox_to_anchor=(1.05, 1), loc='upper left',
+                  handleheight=2.5, handlelength=3, borderaxespad=0.)
         
         # Adjust layout and save
         plt.tight_layout()

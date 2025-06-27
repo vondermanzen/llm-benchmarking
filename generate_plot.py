@@ -102,7 +102,8 @@ def create_plot(scores):
         plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
                  f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
     legend_handles = [plt.Rectangle((0,0),1,1, color=DISPLAY_TO_COLOR[name]) for name in names]
-    plt.legend(legend_handles, names, title="Assistant", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.legend(legend_handles, names, title="Assistant", bbox_to_anchor=(1.05, 1), loc='upper left',
+              handleheight=2.5, handlelength=3, borderaxespad=0.)
     plt.tight_layout()
     plt.savefig('coding_assistants.png', dpi=300, bbox_inches='tight')
     plt.close()
