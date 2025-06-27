@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import matplotlib.pyplot as plt
 import pandas as pd
+from assistant_mapping import TECHNICAL_TO_DISPLAY, DISPLAY_TO_COLOR
 
 
 def create_feature_plot():
-    """Create a plot based on feature scores from features.txt."""
+    """Create a plot based on feature scores from features.txt using shared mapping and color legend."""
     try:
         # Read the features.txt file
         df = pd.read_csv('features.txt', sep='\t')
@@ -29,32 +30,33 @@ def create_feature_plot():
         
         for _, row in df.iterrows():
             tool_name = row['Tool']
+            if tool_name not in TECHNICAL_TO_DISPLAY:
+                continue
             score = 0
-            
             for feature, weight in feature_weights.items():
                 if feature in row and row[feature] == 'Yes':
                     score += weight
             # Minimum score is zero
             score = max(score, 0)
-            tool_scores[tool_name] = score
+            tool_scores[TECHNICAL_TO_DISPLAY[tool_name]] = score
         
         # Sort by score (descending)
         sorted_scores = dict(sorted(tool_scores.items(), key=lambda x: x[1], reverse=True))
+        
+        # Get color for each assistant
+        colors = [DISPLAY_TO_COLOR[name] for name in sorted_scores.keys()]
         
         # Create the plot
         plt.figure(figsize=(14, 10))
         tools = list(sorted_scores.keys())
         scores = list(sorted_scores.values())
-        
-        # All bars the same color
-        color = '#2E8B57'
-        bars = plt.bar(tools, scores, color=color, alpha=0.8)
+        bars = plt.bar(tools, scores, color=colors, alpha=0.8)
         
         # Customize the plot
         plt.title('Comparative analysis', fontsize=16, fontweight='bold')
-        plt.xlabel('Coding Assistant', fontsize=12, fontweight='bold')
+        plt.xlabel('')
         plt.ylabel('Feature Score', fontsize=12, fontweight='bold')
-        plt.xticks(rotation=45, ha='right')
+        plt.xticks([])  # Remove names from below the plot
         plt.grid(axis='y', alpha=0.3, linestyle='--')
         
         # Add value labels on top of bars
@@ -62,6 +64,10 @@ def create_feature_plot():
             plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
                     f"{score}", ha='center', va='bottom', 
                     fontweight='bold', fontsize=10)
+        
+        # Add legend
+        legend_handles = [plt.Rectangle((0,0),1,1, color=DISPLAY_TO_COLOR[name]) for name in tools]
+        plt.legend(legend_handles, tools, title="Assistant", bbox_to_anchor=(1.05, 1), loc='upper left')
         
         # Adjust layout and save
         plt.tight_layout()
@@ -74,12 +80,12 @@ def create_feature_plot():
         print("\nFeature-based scores:")
         for tool, score in sorted_scores.items():
             print(f"{tool}: {score}")
-            
+        
         # Print feature weights for reference
         print("\nFeature weights used:")
         for feature, weight in feature_weights.items():
             print(f"{feature}: {weight:+d}")
-            
+        
     except Exception as e:
         print(f"Error creating feature plot: {e}")
 

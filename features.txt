@@ -3,7 +3,6 @@ Ayan	Full-featured	cursor	No	No	No	No	No	Yes	Yes	Yes	Yes	No	No	No	No	No
 Maria	Full-featured	github_copilot	No	No	No	No	No	Yes	Yes	No	No	Yes	Yes	Yes	No	No
 Ansar	Full-featured	amazonq	No	No	No	No	No	Yes	Yes	Yes	Yes	No	Yes	Yes	No	No
 Maria	Lightweight	replit	No	No	No	No	No	Yes	Yes	Yes	Yes	No	No	No	No	Yes
-Ayan	Full-featured	mutable_ai	No	No	No	No	No	Yes	No	Yes	No	No	No	Yes	Yes	No
 Ansar	Lightweight	tabbyml	Yes	Yes	No	Yes	No	Yes	Yes	Yes	No	No	No	Yes	No	No
 Sid	Lightweight	codex	No	No	No	Yes	No	Yes	No	No	No	No	No	Yes	Yes	No
 Paul	Full-featured	sourcegraph	No	Yes	No	No	Yes	Yes	Yes	Yes	No	No	No	Yes	Yes	No

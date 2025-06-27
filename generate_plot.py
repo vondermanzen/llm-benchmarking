@@ -5,6 +5,7 @@ import re
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import pandas as pd
+from assistant_mapping import TECHNICAL_TO_DISPLAY, DISPLAY_TO_COLOR, GENERAL_LLM_TECHNICAL_TO_DISPLAY
 
 def run_benchmarks():
     """Run the benchmark script and capture output with real-time display."""
@@ -75,77 +76,77 @@ def parse_scores(output):
     return scores
 
 def create_plot(scores):
-    """Create two separate bar charts - one for coding assistants and one for non-coding assistants."""
+    """Create a bar chart for coding assistants using shared mapping and color legend. Also plot general LLMs in black and white with patterns."""
     if not scores:
         print("No scores found to plot!")
         return
     
-    # Sort by score (descending)
-    sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1], reverse=True))
-    
-    # Define non-code assistants (all others are code assistants)
-    non_code_assistants = {'deepseek_v3', 'gpt4', 'grok2', 'claude3_5sonnet', 'gemini1_5', 'meta_llama3', 'phi4', 'nova_pro', 'nous_hermes3','sarvam_m','dolphin_mixtral', 'cohere_commandr','qwen2','01ai_yi','a21_jamba', 'mythalion', 'mythomax', 'nvidia_llama3', 'thudm_glm4', 'perplexity_sonar'}
-    
-    # Split scores into two groups
-    code_scores = {k: v for k, v in sorted_scores.items() if k not in non_code_assistants}
-    non_code_scores = {k: v for k, v in sorted_scores.items() if k in non_code_assistants}
-    
-    # Add Cancre to both groups if it exists
-    if 'cancre' in sorted_scores:
-        code_scores['cancre'] = sorted_scores['cancre']
-        non_code_scores['cancre'] = sorted_scores['cancre']
+    # Coding assistants (in mapping)
+    filtered_scores = {k: v for k, v in scores.items() if k in TECHNICAL_TO_DISPLAY}
+    display_scores = {TECHNICAL_TO_DISPLAY[k]: v for k, v in filtered_scores.items()}
+    sorted_scores = dict(sorted(display_scores.items(), key=lambda x: x[1], reverse=True))
+    colors = [DISPLAY_TO_COLOR[name] for name in sorted_scores.keys()]
     
     # Plot coding assistants
-    if code_scores:
-        plt.figure(figsize=(12, 8))
-        llms = list(code_scores.keys())
-        score_values = list(code_scores.values())
-        bars1 = plt.bar(llms, score_values, color='#ADD8E6')
-        
-        # Customize the plot
-        plt.title('Code Evaluation', fontsize=16, fontweight='bold')
-        plt.xlabel('Code Assistant', fontsize=12, fontweight='bold')
+    plt.figure(figsize=(14, 8))
+    names = list(sorted_scores.keys())
+    values = list(sorted_scores.values())
+    bars = plt.bar(names, values, color=colors)
+    plt.title('Code Evaluation', fontsize=16, fontweight='bold')
+    plt.xlabel('')
+    plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
+    plt.xticks([])
+    plt.ylim(0, 100)
+    plt.grid(axis='y', alpha=0.3, linestyle='--')
+    for bar, value in zip(bars, values):
+        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
+                 f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
+    legend_handles = [plt.Rectangle((0,0),1,1, color=DISPLAY_TO_COLOR[name]) for name in names]
+    plt.legend(legend_handles, names, title="Assistant", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    plt.savefig('coding_assistants.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    print(f"\nPlot saved as 'coding_assistants.png'")
+
+    # General LLMs (not in mapping)
+    general_llms = {k: v for k, v in scores.items() if k not in TECHNICAL_TO_DISPLAY}
+    if general_llms:
+        # Use pretty names
+        display_general = {GENERAL_LLM_TECHNICAL_TO_DISPLAY.get(k, k): v for k, v in general_llms.items()}
+        sorted_general = dict(sorted(display_general.items(), key=lambda x: x[1], reverse=True))
+        plt.figure(figsize=(14, 8))
+        names = list(sorted_general.keys())
+        values = list(sorted_general.values())
+        patterns = ['/', '\\', '|', '-', '+', 'x', 'o', 'O', '.', '*']
+        bars = []
+        legend_handles = []
+        for i, (name, value) in enumerate(zip(names, values)):
+            bar = plt.bar(name, value, color='white', edgecolor='black',
+                          hatch=patterns[i % len(patterns)])
+            bars.append(bar)
+            # Larger legend handle for better pattern visibility
+            legend_handles.append(
+                plt.Rectangle((0,0), 2, 1.2, facecolor='white', edgecolor='black', hatch=patterns[i % len(patterns)])
+            )
+        plt.title('General LLMs Code Evaluation (OpenRouter)', fontsize=16, fontweight='bold')
+        plt.xlabel('')
         plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
-        plt.xticks(rotation=45, ha='right')
+        plt.xticks([])
         plt.ylim(0, 100)
         plt.grid(axis='y', alpha=0.3, linestyle='--')
-        
-        # Add value labels on top of bars
-        for bar, value in zip(bars1, score_values):
-            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
-                    f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
-        
-        # Adjust layout and save
-        plt.tight_layout()
-        plt.savefig('coding_assistants.png', dpi=300, bbox_inches='tight')
-        plt.close()
-    
-    # Plot non-coding assistants
-    if non_code_scores:
-        plt.figure(figsize=(12, 8))
-        llms = list(non_code_scores.keys())
-        score_values = list(non_code_scores.values())
-        bars2 = plt.bar(llms, score_values, color='#87CEEB')
-        
-        # Customize the plot
-        plt.title('Code Evaluation Reference', fontsize=16, fontweight='bold')
-        plt.xlabel('Model', fontsize=12, fontweight='bold')
-        plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
-        plt.xticks(rotation=45, ha='right')
-        plt.ylim(0, 100)
-        plt.grid(axis='y', alpha=0.3, linestyle='--')
-        
-        # Add value labels on top of bars
-        for bar, value in zip(bars2, score_values):
-            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
-                    f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
-        
-        # Adjust layout and save
+        for bar, value in zip(bars, values):
+            rect = bar[0]
+            plt.text(rect.get_x() + rect.get_width()/2, rect.get_height() + 0.5, 
+                     f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
+        plt.legend(
+            legend_handles, names, title="General LLM",
+            bbox_to_anchor=(1.05, 1), loc='upper left',
+            handleheight=2.5, handlelength=3, borderaxespad=0.
+        )
         plt.tight_layout()
         plt.savefig('general_llms.png', dpi=300, bbox_inches='tight')
         plt.close()
-    
-    print(f"\nPlots saved as 'coding_assistants.png' and 'general_llms.png'")
+        print(f"Plot saved as 'general_llms.png'")
 
 def main():
     print("Running benchmarks...")
