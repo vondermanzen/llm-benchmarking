@@ -1,19 +1,19 @@
-Evaluator	Category	Tool	Open Source	Self-hostable	Domain-Specific	Backend/SDK	LLM Agnostic	Tab Completion	Chat	Modify Files	Run Commands	Select Context	IP Checks	Multi-IDE	Data Retained	Data Re-used
-Ayan	Full-featured	cursor	No	No	No	No	No	Yes	Yes	Yes	Yes	No	No	No	No	No
-Maria	Full-featured	github_copilot	No	No	No	No	No	Yes	Yes	No	No	Yes	Yes	Yes	No	No
-Ansar	Full-featured	amazonq	No	No	No	No	No	Yes	Yes	Yes	Yes	No	Yes	Yes	No	No
-Maria	Lightweight	replit	No	No	No	No	No	Yes	Yes	Yes	Yes	No	No	No	No	Yes
-Ansar	Lightweight	tabbyml	Yes	Yes	No	Yes	No	Yes	Yes	Yes	No	No	No	Yes	No	No
-Sid	Lightweight	codex	No	No	No	Yes	No	Yes	No	No	No	No	No	Yes	Yes	No
-Paul	Full-featured	sourcegraph	No	Yes	No	No	Yes	Yes	Yes	Yes	No	No	No	Yes	Yes	No
-Maria	Lightweight	tabnine	No	Yes	No	No	Yes	Yes	Yes	No	No	Yes	No	Yes	No	No
-Ansar	Full-featured	cline	Yes	Yes	No	No	Yes	No	Yes	Yes	Yes	No	No	No	No	No
-Ayan	Lightweight	trae	Yes	Yes	No	No	Yes	Yes	Yes	Yes	Yes	No	No	No	No	No
-Maria	Lightweight	qodo	No	No	Yes	Yes	No	Yes	Yes	Yes	No	No	No	Yes	Yes	No
-Ayan	Lightweight	zededitor	No	Yes	No	No	Yes	Yes	Yes	Yes	Yes	Yes	No	No	No	No
-Ansar	Full-featured	windsurf	No	Yes	No	Yes	No	Yes	Yes	Yes	No	No	No	Yes	No	No
-Sid	Lightweight	firebase	No	No	Yes	No	No	Yes	Yes	Yes	Yes	No	Yes	No	Yes	No
-Ansar	Full-featured	aider	Yes	Yes	No	No	Yes	No	Yes	Yes	Yes	Yes	No	Yes	No	No
-Paul	Full-featured	pycharm	No	No	Yes	No	No	Yes	Yes	Yes	Yes	Yes	No	Yes	Yes	Yes
-Paul	Lightweight	codex_edu	No	No	No	Yes	No	Yes	No	No	No	No	No	Yes	No	No
-Maria	Full-featured	jetbrain_junie	No	No	Yes	No	No	No	Yes	Yes	Yes	Yes	No	Yes	Yes	No
+Evaluator	Category	Tool	Open Source	Self-hostable	Backend/SDK	LLM Agnostic	Tab Completion	Chat	Modify Files	Run Commands	Select Context	IP Checks	Multi-IDE	Data Retained	Data Re-used
+Ayan	Full-featured	cursor	No	No	No	No	Yes	Yes	Yes	Yes	No	No	No	No	No
+Maria	Full-featured	github_copilot	No	No	No	No	Yes	Yes	No	No	Yes	Yes	Yes	No	No
+Ansar	Full-featured	amazonq	No	No	No	No	Yes	Yes	Yes	Yes	No	Yes	Yes	No	No
+Maria	Lightweight	replit	No	No	No	No	Yes	Yes	Yes	Yes	No	No	No	No	Yes
+Ansar	Lightweight	tabbyml	Yes	Yes	Yes	No	Yes	Yes	Yes	No	No	No	Yes	No	No
+Sid	Lightweight	codex	No	No	Yes	No	Yes	No	No	No	No	No	Yes	Yes	No
+Paul	Full-featured	sourcegraph	No	Yes	No	Yes	Yes	Yes	Yes	No	No	No	Yes	Yes	No
+Maria	Lightweight	tabnine	No	Yes	No	Yes	Yes	Yes	No	No	Yes	No	Yes	No	No
+Ansar	Full-featured	cline	Yes	Yes	No	Yes	No	Yes	Yes	Yes	No	No	No	No	No
+Ayan	Lightweight	trae	Yes	Yes	No	Yes	Yes	Yes	Yes	Yes	No	No	No	No	No
+Maria	Lightweight	qodo	No	No	Yes	No	Yes	Yes	Yes	No	No	No	Yes	Yes	No
+Ayan	Lightweight	zededitor	No	Yes	No	Yes	Yes	Yes	Yes	Yes	Yes	No	No	No	No
+Ansar	Full-featured	windsurf	No	Yes	Yes	No	Yes	Yes	Yes	No	No	No	Yes	No	No
+Sid	Lightweight	firebase	No	No	No	No	Yes	Yes	Yes	Yes	No	Yes	No	Yes	No
+Ansar	Full-featured	aider	Yes	Yes	No	Yes	No	Yes	Yes	Yes	Yes	No	Yes	No	No
+Paul	Full-featured	pycharm	No	No	No	No	Yes	Yes	Yes	Yes	Yes	No	Yes	Yes	Yes
+Paul	Lightweight	codex_edu	No	No	Yes	No	Yes	No	No	No	No	No	Yes	No	No
+Maria	Full-featured	jetbrain_junie	No	No	No	No	No	Yes	Yes	Yes	Yes	No	Yes	Yes	No
