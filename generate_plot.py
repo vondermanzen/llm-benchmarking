@@ -5,7 +5,75 @@ import re
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import pandas as pd
+import json
+import os
 from assistant_mapping import TECHNICAL_TO_DISPLAY, DISPLAY_TO_COLOR, GENERAL_LLM_TECHNICAL_TO_DISPLAY
+
+def load_accumulated_scores():
+    """Load accumulated scores from JSON file if it exists."""
+    json_file = 'accumulated_scores.json'
+    if os.path.exists(json_file):
+        try:
+            with open(json_file, 'r') as f:
+                data = json.load(f)
+                print(f"Loaded {data.get('run_count', 0)} previous benchmark runs")
+                return data
+        except Exception as e:
+            print(f"Error loading accumulated scores: {e}")
+    return {'scores': {}, 'raw_scores': {}, 'run_count': 0}
+
+def save_accumulated_scores(accumulated_data):
+    """Save accumulated scores to JSON file."""
+    json_file = 'accumulated_scores.json'
+    try:
+        with open(json_file, 'w') as f:
+            json.dump(accumulated_data, f, indent=2)
+        print(f"Saved accumulated scores (total runs: {accumulated_data['run_count']})")
+    except Exception as e:
+        print(f"Error saving accumulated scores: {e}")
+
+def accumulate_scores(existing_data, new_scores, new_raw_scores):
+    """Accumulate new scores with existing data. Only accumulate performance scores, not raw correctness."""
+    if not existing_data:
+        return {
+            'scores': new_scores,
+            'raw_scores': new_raw_scores,  # Raw scores don't change, just use latest
+            'run_count': 1
+        }
+    
+    # Get existing data
+    existing_scores = existing_data.get('scores', {})
+    run_count = existing_data.get('run_count', 0)
+    
+    # Accumulate only performance scores
+    accumulated_scores = {}
+    
+    # Combine all unique models
+    all_models = set(existing_scores.keys()) | set(new_scores.keys())
+    
+    for model in all_models:
+        # Get existing values (0 if not present)
+        existing_score = existing_scores.get(model, 0)
+        
+        # Get new values (0 if not present)
+        new_score = new_scores.get(model, 0)
+        
+        # Calculate running average for performance scores only
+        if existing_score == 0 and new_score == 0:
+            accumulated_scores[model] = 0
+        elif existing_score == 0:
+            accumulated_scores[model] = new_score
+        elif new_score == 0:
+            accumulated_scores[model] = existing_score
+        else:
+            # Weighted average based on run count
+            accumulated_scores[model] = (existing_score * run_count + new_score) / (run_count + 1)
+    
+    return {
+        'scores': accumulated_scores,
+        'raw_scores': new_raw_scores,  # Always use latest raw scores (they don't change)
+        'run_count': run_count + 1
+    }
 
 def run_benchmarks():
     """Run the benchmark script and capture output with real-time display."""
@@ -226,7 +294,10 @@ def create_plot(scores, raw_scores):
         print(f"Plot saved as 'general_llms.png'")
 
 def main():
-    print("Running benchmarks...")
+    print("Loading accumulated scores...")
+    accumulated_data = load_accumulated_scores()
+    
+    print("\nRunning benchmarks...")
     print("(This may take a while...)\n")
     
     output = run_benchmarks()
@@ -239,15 +310,26 @@ def main():
     print("ANALYZING RESULTS")
     print("="*60)
     
-    scores, raw_scores = parse_scores(output)
+    new_scores, new_raw_scores = parse_scores(output)
     
-    if scores:
-        print("\nExtracted scores:")
-        for llm, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
+    if new_scores:
+        print(f"\nCurrent run scores:")
+        for llm, score in sorted(new_scores.items(), key=lambda x: x[1], reverse=True):
+            print(f"{llm}: {score:.2f}")
+        
+        # Accumulate with existing data
+        print(f"\nAccumulating with {accumulated_data['run_count']} previous runs...")
+        accumulated_data = accumulate_scores(accumulated_data, new_scores, new_raw_scores)
+        
+        # Save accumulated results
+        save_accumulated_scores(accumulated_data)
+        
+        print(f"\nFinal accumulated scores (after {accumulated_data['run_count']} runs):")
+        for llm, score in sorted(accumulated_data['scores'].items(), key=lambda x: x[1], reverse=True):
             print(f"{llm}: {score:.2f}")
         
         print("\nGenerating plot...")
-        create_plot(scores, raw_scores)
+        create_plot(accumulated_data['scores'], accumulated_data['raw_scores'])
     else:
         print("No scores could be extracted from the output!")
         print("Debug: Checking if output contains expected patterns...")
