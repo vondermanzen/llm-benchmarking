@@ -46,11 +46,35 @@ def run_benchmarks():
 def parse_scores(output):
     """Parse the benchmark output to extract scores for each LLM."""
     scores = {}
+    raw_scores = {}
     
     # Split output into lines
     lines = output.split('\n')
     
-    # Look for the final scores section
+    # First, collect raw scores from individual benchmark outputs
+    raw_score_data = {}
+    current_script = None
+    
+    for line in lines:
+        # Look for "Script Evaluation Results:" sections
+        if "Script Evaluation Results:" in line:
+            current_script = None
+            continue
+        
+        # Match pattern like "script.py    5/7     123.45"
+        match = re.match(r'(\w+\.py)\s+(\d+)/(\d+)\s+(\d+\.?\d*)', line)
+        if match:
+            script_name = match.group(1).replace('.py', '')
+            correct = int(match.group(2))
+            total = int(match.group(3))
+            
+            if script_name not in raw_score_data:
+                raw_score_data[script_name] = {'correct': 0, 'total': 0}
+            
+            raw_score_data[script_name]['correct'] += correct
+            raw_score_data[script_name]['total'] += total
+    
+    # Now parse the final adjusted scores
     in_final_scores = False
     for line in lines:
         if "FINAL SCORES (Adjusted for Speed)" in line:
@@ -65,17 +89,22 @@ def parse_scores(output):
             match = re.match(r'(\w+\.py)\s+(\d+\.?\d*)', line)
             if match:
                 llm_name = match.group(1).replace('.py', '')  # Remove .py extension
-                score = float(match.group(2))
-                # Normalize score to 0-100 scale
-                normalized_score = (score / 70) * 100  # Assuming max score is around 70
-                # Divide score by 2 if model name contains 'grok'
-                if 'grok' in llm_name.lower():
-                    normalized_score /= 2
-                scores[llm_name] = normalized_score
+                adjusted_score = float(match.group(2))
+                
+                # Get raw score from collected data
+                raw_correct = raw_score_data.get(llm_name, {}).get('correct', 0)
+                raw_total = raw_score_data.get(llm_name, {}).get('total',68)  # Default to 70 if not found
+                
+                # Normalize adjusted score to 0-100 scale, but keep raw score as actual points
+                normalized_adjusted = (adjusted_score / 68) * 100  # Maximum score is 70
+                raw_score = (raw_correct / 68) * 100  # Raw score as percentage of total possible
+                
+                scores[llm_name] = normalized_adjusted
+                raw_scores[llm_name] = raw_score
     
-    return scores
+    return scores, raw_scores
 
-def create_plot(scores):
+def create_plot(scores, raw_scores):
     """Create a bar chart for coding assistants using shared mapping and color legend. Also plot general LLMs in black and white with patterns."""
     if not scores:
         print("No scores found to plot!")
@@ -87,23 +116,45 @@ def create_plot(scores):
     sorted_scores = dict(sorted(display_scores.items(), key=lambda x: x[1], reverse=True))
     colors = [DISPLAY_TO_COLOR[name] for name in sorted_scores.keys()]
     
-    # Plot coding assistants
+    # Get corresponding raw scores (ordered by adjusted scores)
+    display_raw_scores = {TECHNICAL_TO_DISPLAY[k]: raw_scores[k] for k, v in filtered_scores.items()}
+    raw_values = [display_raw_scores[name] for name in sorted_scores.keys()]
+    
+    # Plot coding assistants with stacked bars
     plt.figure(figsize=(14, 8))
     names = list(sorted_scores.keys())
-    values = list(sorted_scores.values())
-    bars = plt.bar(names, values, color=colors)
+    adjusted_values = list(sorted_scores.values())
+    
+    # Create stacked bars: adjusted score (bottom) + penalty component (top)
+    penalty_values = [max(0, raw - adj) for raw, adj in zip(raw_values, adjusted_values)]
+    
+    # Plot adjusted score as the base (this is what we're ordering by)
+    bars_adjusted = plt.bar(names, adjusted_values, color=colors, alpha=0.7, label='Final Score')
+    
+    # Plot penalty component on top (if any)
+    if any(p > 0 for p in penalty_values):
+        bars_penalty = plt.bar(names, penalty_values, bottom=adjusted_values, 
+                              color='red', alpha=0.2, label='Raw Correctness Bonus')
+    
     plt.title('Code Evaluation', fontsize=16, fontweight='bold')
     plt.xlabel('')
     plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
-    plt.xticks([])
+    plt.xticks(range(len(names)), names, rotation=45, ha='right')
     plt.ylim(0, 100)
     plt.grid(axis='y', alpha=0.3, linestyle='--')
-    for bar, value in zip(bars, values):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5, 
-                 f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
+    
+    # Add value labels on top of bars
+    for i, (name, adj_val, raw_val) in enumerate(zip(names, adjusted_values, raw_values)):
+        plt.text(i, adj_val + 0.5, f"{adj_val:.1f}", ha='center', va='bottom', fontweight='bold')
+    
+    # Create legend for assistants
     legend_handles = [plt.Rectangle((0,0),1,1, color=DISPLAY_TO_COLOR[name]) for name in names]
-    plt.legend(legend_handles, names, title="Assistant", bbox_to_anchor=(1.05, 1), loc='upper left',
+    # Add legend entry for raw correctness bonus at the top
+    legend_handles.insert(0, plt.Rectangle((0,0),1,1, color='red', alpha=0.2))
+    legend_names = ['Code Correctness'] + names
+    plt.legend(legend_handles, legend_names, bbox_to_anchor=(1.05, 1), loc='upper left',
               handleheight=2.5, handlelength=3, borderaxespad=0.)
+    
     plt.tight_layout()
     plt.savefig('coding_assistants.png', dpi=300, bbox_inches='tight')
     plt.close()
@@ -115,32 +166,55 @@ def create_plot(scores):
         # Use pretty names
         display_general = {GENERAL_LLM_TECHNICAL_TO_DISPLAY.get(k, k): v for k, v in general_llms.items()}
         sorted_general = dict(sorted(display_general.items(), key=lambda x: x[1], reverse=True))
+        
+        # Get corresponding raw scores for general LLMs (ordered by adjusted scores)
+        display_general_raw = {GENERAL_LLM_TECHNICAL_TO_DISPLAY.get(k, k): raw_scores[k] for k, v in general_llms.items()}
+        general_raw_values = [display_general_raw[name] for name in sorted_general.keys()]
+        
         plt.figure(figsize=(14, 8))
         names = list(sorted_general.keys())
-        values = list(sorted_general.values())
+        adjusted_values = list(sorted_general.values())
+        
+        # Create stacked bars for general LLMs
+        penalty_values = [max(0, raw - adj) for raw, adj in zip(general_raw_values, adjusted_values)]
+        
         patterns = ['/', '\\', '|', '-', '+', 'x', 'o', 'O', '.', '*']
-        bars = []
+        bars_adjusted = []
+        bars_penalty = []
         legend_handles = []
-        for i, (name, value) in enumerate(zip(names, values)):
-            bar = plt.bar(name, value, color='white', edgecolor='black',
-                          hatch=patterns[i % len(patterns)])
-            bars.append(bar)
-            # Larger legend handle for better pattern visibility
+        
+        for i, (name, adj_val, raw_val) in enumerate(zip(names, adjusted_values, general_raw_values)):
+            # Plot adjusted score as the base
+            bar_adjusted = plt.bar(name, adj_val, color='white', edgecolor='black',
+                                  hatch=patterns[i % len(patterns)], alpha=0.7)
+            bars_adjusted.append(bar_adjusted)
+            
+            # Plot penalty component if any
+            penalty_val = max(0, raw_val - adj_val)
+            if penalty_val > 0:
+                bar_penalty = plt.bar(name, penalty_val, bottom=adj_val, color='red', alpha=0.2)
+                bars_penalty.append(bar_penalty)
+            
+            # Create legend handle
             legend_handles.append(
-                plt.Rectangle((0,0), 2, 1.2, facecolor='white', edgecolor='black', hatch=patterns[i % len(patterns)])
+                plt.Rectangle((0,0), 2, 1.2, facecolor='white', edgecolor='black', 
+                            hatch=patterns[i % len(patterns)])
             )
+        
         plt.title('Code Evaluation Reference (OpenRouter)', fontsize=16, fontweight='bold')
         plt.xlabel('')
         plt.ylabel('Score (0-100)', fontsize=12, fontweight='bold')
-        plt.xticks([])
+        plt.xticks(range(len(names)), names, rotation=45, ha='right')
         plt.ylim(0, 100)
         plt.grid(axis='y', alpha=0.3, linestyle='--')
-        for bar, value in zip(bars, values):
-            rect = bar[0]
-            plt.text(rect.get_x() + rect.get_width()/2, rect.get_height() + 0.5, 
-                     f"{value:.1f}", ha='center', va='bottom', fontweight='bold')
+        
+        # Add value labels
+        for i, (name, adj_val, raw_val) in enumerate(zip(names, adjusted_values, general_raw_values)):
+            plt.text(i, adj_val + 0.5, f"{adj_val:.1f}", ha='center', va='bottom', fontweight='bold')
+        
         plt.legend(
-            legend_handles, names, title="Model",
+            [plt.Rectangle((0,0),1,1, color='red', alpha=0.2)] + legend_handles, 
+            ['Code Correctness'] + names,
             bbox_to_anchor=(1.05, 1), loc='upper left',
             handleheight=2.5, handlelength=3, borderaxespad=0.
         )
@@ -163,7 +237,7 @@ def main():
     print("ANALYZING RESULTS")
     print("="*60)
     
-    scores = parse_scores(output)
+    scores, raw_scores = parse_scores(output)
     
     if scores:
         print("\nExtracted scores:")
@@ -171,7 +245,7 @@ def main():
             print(f"{llm}: {score:.2f}")
         
         print("\nGenerating plot...")
-        create_plot(scores)
+        create_plot(scores, raw_scores)
     else:
         print("No scores could be extracted from the output!")
         print("Debug: Checking if output contains expected patterns...")

@@ -64,7 +64,7 @@ def create_feature_plot():
         plt.title('Comparative Analysis', fontsize=16, fontweight='bold')
         plt.xlabel('')
         plt.ylabel('Feature Score', fontsize=12, fontweight='bold')
-        plt.xticks([])  # Remove names from below the plot
+        plt.xticks(range(len(tools)), tools, rotation=45, ha='right')
         plt.grid(axis='y', alpha=0.3, linestyle='--')
         
         # Add value labels on top of bars
