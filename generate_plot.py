@@ -178,7 +178,9 @@ def create_plot(scores, raw_scores):
         # Create stacked bars for general LLMs
         penalty_values = [max(0, raw - adj) for raw, adj in zip(general_raw_values, adjusted_values)]
         
-        patterns = ['/', '\\', '|', '-', '+', 'x', 'o', 'O', '.', '*']
+        patterns = ['/', '\\', '|', '-', '+', 'x', 'o', 'O', '.', '*',
+ '\\+x', '\\|*', '+o.', 'O.', '-.', '|.*', '|-o', '|-', '\\o*', 'oO',
+ '/\\', '/xO', '\\o.', '/+O', '\\-.', '-xo', 'oO.', '/-+', '\\|.', '|o']
         bars_adjusted = []
         bars_penalty = []
         legend_handles = []
